@@ -57,19 +57,27 @@ class OracleAgent:
         oracle_client_path = os.path.join(oracle_client_dir, os.listdir(oracle_client_dir)[0])
 
         cx_Oracle.init_oracle_client(oracle_client_path)
-        
+            
+        # user = self.config['user']
+        # pw = self.config['pw']
+        # host = self.config['host']
+        # port = self.config['port']
+        # service_name = self.config['service_name']
+        # self.conn = create_engine(f'oracle+cx_oracle://{user}:{pw}@{host}:{port}/?service_name={service_name}')
+
+
+    def read_table(self, query):
+        warnings.filterwarnings('ignore')
         user = self.config['user']
         pw = self.config['pw']
         host = self.config['host']
         port = self.config['port']
         service_name = self.config['service_name']
-        self.conn = create_engine(f'oracle+cx_oracle://{user}:{pw}@{host}:{port}/?service_name={service_name}')
 
+        conn = create_engine(f'oracle+cx_oracle://{user}:{pw}@{host}:{port}/?service_name={service_name}')
 
-    def read_table(self, query):
-        warnings.filterwarnings('ignore')
-
-        df = pd.read_sql(query, con=self.conn)
+        df = pd.read_sql(query, con=conn)
         df.columns = df.columns.str.lower()
-
+        
+        
         return df
