@@ -46,18 +46,26 @@ class MySQLAgent:
         
         
 class OracleAgent:
+    _oracle_initialized = False
+
     def __init__(self, config) -> None:
         self.config = config
         self.db_connector()
     
     def db_connector(self):
 
-        oracle_client_dir = './opt/oracle'
+        if not OracleAgent._oracle_initialized:
 
-        oracle_client_path = os.path.join(oracle_client_dir, os.listdir(oracle_client_dir)[0])
+            oracle_client_dir = './opt/oracle/'
+            folders = [folder for folder in os.listdir(oracle_client_dir) if folder.startswith("instantclient")]
+            if folders:
+                oracle_client_path = os.path.join(oracle_client_dir, folders[0])
+            else:
+                oracle_client_path = None
+            cx_Oracle.init_oracle_client(lib_dir=oracle_client_path)
 
-        cx_Oracle.init_oracle_client(oracle_client_path)
-            
+            OracleAgent._oracle_initialized = True
+
         user = self.config['user']
         pw = self.config['pw']
         host = self.config['host']
