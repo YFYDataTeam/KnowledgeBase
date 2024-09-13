@@ -1,0 +1,168 @@
+﻿view_name,text,input,lineage
+C$_0W_YFY_AV_TW_R,"select ""C1_ROW_ID"",""C2_ORG_ID"",""C3_REF_AV_HEADER_ID"",""C4_ORDER_AV"",""C5_UPDATE_DT"",""C6_CREATION_DT"",""C7_DATASOURCE_NUM_ID"",""C8_MODEL_ITEM"",""C9_ORDER_TRANSPORT_FEE"",""C10_PRICECLASS_COST"" from (    select   W_YFY_AV_TW_R.ROW_ID C1_ROW_ID,  W_YFY_AV_TW_R.ORG_ID C2_ORG_ID,  W_YFY_AV_TW_R.REF_AV_HEADER_ID C3_REF_AV_HEADER_ID,  W_YFY_AV_TW_R.ORDER_AV C4_ORDER_AV,  W_YFY_AV_TW_R.UPDATE_DT C5_UPDATE_DT,  W_YFY_AV_TW_R.CREATION_DT C6_CREATION_DT,  W_YFY_AV_TW_R.DATASOURCE_NUM_ID C7_DATASOURCE_NUM_ID,  W_YFY_AV_TW_R.MODEL_ITEM C8_MODEL_ITEM,  W_YFY_AV_TW_R.ORDER_TRANSPORT_FEE C9_ORDER_TRANSPORT_FEE,  W_YFY_AV_TW_R.PRICECLASS_COST C10_PRICECLASS_COST from ODS.W_YFY_AV_TW_R   W_YFY_AV_TW_R where (1=1)        )","select ""C1_ROW_ID"",""C2_ORG_ID"",""C3_REF_AV_HEADER_ID"",""C4_ORDER_AV"",""C5_UPDATE_DT"",""C6_CREATION_DT"",""C7_DATASOURCE_NUM_ID"",""C8_MODEL_ITEM"",""C9_ORDER_TRANSPORT_FEE"",""C10_PRICECLASS_COST"" from (    select   W_YFY_AV_TW_R.ROW_ID C1_ROW_ID,  W_YFY_AV_TW_R.ORG_ID C2_ORG_ID,  W_YFY_AV_TW_R.REF_AV_HEADER_ID C3_REF_AV_HEADER_ID,  W_YFY_AV_TW_R.ORDER_AV C4_ORDER_AV,  W_YFY_AV_TW_R.UPDATE_DT C5_UPDATE_DT,  W_YFY_AV_TW_R.CREATION_DT C6_CREATION_DT,  W_YFY_AV_TW_R.DATASOURCE_NUM_ID C7_DATASOURCE_NUM_ID,  W_YFY_AV_TW_R.MODEL_ITEM C8_MODEL_ITEM,  W_YFY_AV_TW_R.ORDER_TRANSPORT_FEE C9_ORDER_TRANSPORT_FEE,  W_YFY_AV_TW_R.PRICECLASS_COST C10_PRICECLASS_COST from ODS.W_YFY_AV_TW_R   W_YFY_AV_TW_R where ()","Result = {
+""Union1"": ""
+Datasource = ['W_YFY_AV_TW_R']
+Filter = []
+Join = []
+Groupby = {}
+""
+}"
+C$_0W_YFY_IND_FIN_INFO_FS,"select   FIN_INFO.SEQ    C1_SEQ,  FIN_INFO.ACCOUNT    C2_ACCOUNT,  FIN_INFO.AMOUNT    C3_AMOUNT from ODS.TC$_0W_YFY_IND_FIN_INFO_FS  FIN_INFO ","select   FIN_INFO.SEQ    C1_SEQ,  FIN_INFO.ACCOUNT    C2_ACCOUNT,  FIN_INFO.AMOUNT    C3_AMOUNT from ODS.TC$_0W_YFY_IND_FIN_INFO_FS  FIN_INFO ","Result = {
+""Query"" : ""
+Datasource = ['ODS.TC$_0W_YFY_IND_FIN_INFO_FS']
+Filter = []
+Join = []
+Groupby = {}
+""
+}
+"
+OP_FACT_CHP_INVENTORY_ETH_PULP,"SELECT PERIOD_NAME,STOCK_DATE TDATE,ORG_CODE,'紙漿' STOCK_TYPE, 4 STOCK_TYPE_SORT   ,INVENTORY_ITEM_ID   ,UOM,QTY FROM W_FACTORY_INV_BALANCE_F UNION ALL --花蓮自製漿當月最新庫存 SELECT PERIOD_NAME,STOCK_DATE TDATE,ORG_CODE,'紙漿' STOCK_TYPE, 4 STOCK_TYPE_SORT   ,INVENTORY_ITEM_ID   ,UOM,QTY FROM W_FACTORY_INV_F INV     ,(select max(stock_date) tdate from W_FACTORY_INV_F where ORG_CODE='ETH' AND MEMO='花蓮自製漿' AND PERIOD_NAME = to_char(CURRENT_DATE,'yyyy/mm') ) MS WHERE 1=1   and INV.STOCK_DATE = MS.TDATE   AND INV.ORG_CODE='ETH' AND INV.MEMO='花蓮自製漿'","SELECT PERIOD_NAME,STOCK_DATE TDATE,ORG_CODE,'紙漿' STOCK_TYPE, 4 STOCK_TYPE_SORT   ,INVENTORY_ITEM_ID   ,UOM,QTY FROM W_FACTORY_INV_BALANCE_F UNION ALL --花蓮自製漿當月最新庫存 SELECT PERIOD_NAME,STOCK_DATE TDATE,ORG_CODE,'紙漿' STOCK_TYPE, 4 STOCK_TYPE_SORT   ,INVENTORY_ITEM_ID   ,UOM,QTY FROM W_FACTORY_INV_F INV     ,(select max(stock_date) tdate from W_FACTORY_INV_F where ORG_CODE='ETH' AND MEMO='花蓮自製漿' AND PERIOD_NAME = to_char(CURRENT_DATE,'yyyy/mm') ) MS WHERE and INV.STOCK_DATE = MS.TDATE   AND INV.ORG_CODE='ETH' AND INV.MEMO='花蓮自製漿'","Result = {
+""Union1"":""
+    Datasource=['W_FACTORY_INV_BALANCE_F']
+    Filter=[]
+    Join=[]
+    Groupby={}
+"",
+""Union2"":""
+    Datasource = ['W_FACTORY_INV_F', 'W_FACTORY_INV_F(g)']
+    Filter=['W_FACTORY_INV_F.ORG_CODE'='ETH', 'W_FACTORY_INV_F.MEMO'='花蓮自製漿']
+    Join=['W_FACTORY_INV_F.STOCK_DATE=W_FACTORY_INV_F(g).TDATE']
+    Groupby={
+    'W_FACTORY_INV_F(g)': '(select max(stock_date) tdate from W_FACTORY_INV_F where ORG_CODE=''ETH'' AND MEMO=''花蓮自製漿'' AND PERIOD_NAME = to_char(CURRENT_DATE,''yyyy/mm'') )'
+    }
+""
+}"
+OP_FACT_CHP_INVENTORY_REDEFINE,"SELECT PERIOD_NAME,TDATE,ORG_CODE   ,CASE ORG_CODE WHEN 'FTA' THEN '久堂' WHEN 'FTE' THEN '台東' WHEN 'ETH' THEN '花蓮' ELSE '其他' END STOCK_TYPE   ,CASE ORG_CODE WHEN 'FTA' THEN 1 WHEN 'FTE' THEN 2 WHEN 'ETH' THEN 3 ELSE 9 END STOCK_TYPE_SORT   ,INVENTORY_ITEM_ID--,ITEM_NO   ,UOM,SUM(QTY) QTY FROM (   --每月月底庫存資料   SELECT F.PERIOD_NAME,F.BALANCE_DATE TDATE   ,NVL(R.ORG_CODE_NEW,O.ORG_CODE) ORG_CODE   --,O.ORG_CODE ORG_CODE_Original   ,F.INVENTORY_ITEM_ID   --,I.ITEM_NUMBER ITEM_NO   --,F.SUB_INVENTORY   ,'MT' UOM,F.END_QTY / 1000 AS QTY   FROM W_YFY_INV_BALANCE_F F       ,w_chp_item_d I       ,W_YFY_ORG_D O       ,W_CHP_TS_BELONG_ORG_R R   WHERE 1=1     AND F.ORGANIZATION_ID IN (290,291,305,286,287,288,289)     AND F.ORGANIZATION_ID = I.ORGANIZATION_ID AND F.INVENTORY_ITEM_ID = I.INVENTORY_ITEM_ID     AND F.ORGANIZATION_ID = O.ORG_ID     AND I.ITEM_NUMBER LIKE '4%' AND I.CATEGORY_CODE='FG' AND F.UOM='KG'     AND I.ITEM_DESC_TCH <> '漿塑盤'     AND NOT(F.SUB_INVENTORY  IN ('RM','MTL','SFG','SFGW','FG-PP','FG-PP1')           OR F.SUB_INVENTORY LIKE '%FGS%' )       AND R.ORG_CODE(+) = O.ORG_CODE AND R.SUBINVENTORY_CODE(+) = F.SUB_INVENTORY            AND F.PERIOD_NAME >= '2023/01'   UNION ALL   --當月1號期初庫存資料   SELECT TO_CHAR(CURRENT_DATE,'YYYY/MM') PERIOD_NAME, TO_DATE(TO_CHAR(CURRENT_DATE,'YYYY/MM') || '/01','YYYY/MM/DD' ) TDATE   ,NVL(R.ORG_CODE_NEW,O.ORG_CODE) ORG_CODE   --,O.ORG_CODE ORG_CODE_Original   ,F.INVENTORY_ITEM_ID   --,I.ITEM_NUMBER ITEM_NO   --,F.SUB_INVENTORY   ,'MT' UOM,F.END_QTY / 1000 AS QTY   FROM W_YFY_INV_BALANCE_F F       ,w_chp_item_d I       ,W_YFY_ORG_D O       ,W_CHP_TS_BELONG_ORG_R R   WHERE 1=1     AND F.ORGANIZATION_ID IN (290,291,305,286,287,288,289)     AND F.ORGANIZATION_ID = I.ORGANIZATION_ID AND F.INVENTORY_ITEM_ID = I.INVENTORY_ITEM_ID     AND F.ORGANIZATION_ID = O.ORG_ID     AND I.ITEM_NUMBER LIKE '4%' AND I.CATEGORY_CODE='FG' AND F.UOM='KG'     AND I.ITEM_DESC_TCH <> '漿塑盤'     AND NOT(F.SUB_INVENTORY  IN ('RM','MTL','SFG','SFGW','FG-PP','FG-PP1')           OR F.SUB_INVENTORY LIKE '%FGS%' )       AND R.ORG_CODE(+) = O.ORG_CODE AND R.SUBINVENTORY_CODE(+) = F.SUB_INVENTORY            AND F.PERIOD_NAME = TO_CHAR(add_months(trunc(CURRENT_DATE,'mm'),-1),'YYYY/MM')     and to_char(CURRENT_DATE,'dd') <> '01'   UNION ALL     --當月每日庫存異動資料   SELECT F.PERIOD_NAME,TRUNC(F.TRANSACTION_DATE) TDATE   ,NVL(R.ORG_CODE_NEW,O.ORG_CODE) ORG_CODE   --,O.ORG_CODE ORG_CODE_Original   ,F.INVENTORY_ITEM_ID   --,I.ITEM_NUMBER ITEM_NO   --,F.SUB_INVENTORY   ,'MT' UOM,F.TRANSACTION_QTY / 1000 AS QTY   FROM W_CHP_MMT_F F       ,w_chp_item_d I       ,W_YFY_ORG_D O       ,W_CHP_TS_BELONG_ORG_R R   WHERE 1=1     AND F.ORGANIZATION_ID IN (290,291,305,286,287,288,289)     AND F.ORGANIZATION_ID = I.ORGANIZATION_ID AND F.INVENTORY_ITEM_ID = I.INVENTORY_ITEM_ID     AND F.ORGANIZATION_ID = O.ORG_ID     AND I.ITEM_NUMBER LIKE '4%' AND I.CATEGORY_CODE='FG' AND F.TRANSACTION_UOM='KG'     AND I.ITEM_DESC_TCH <> '漿塑盤'     AND NOT(F.SUB_INVENTORY  IN ('RM','MTL','SFG','SFGW','FG-PP','FG-PP1')           OR F.SUB_INVENTORY LIKE '%FGS%' )       AND R.ORG_CODE(+) = O.ORG_CODE AND R.SUBINVENTORY_CODE(+) = F.SUB_INVENTORY            AND F.PERIOD_NAME = TO_CHAR(CURRENT_DATE,'YYYY/MM') and F.TRANSACTION_DATE < trunc(CURRENT_DATE)   )   GROUP BY PERIOD_NAME,TDATE,ORG_CODE   ,CASE ORG_CODE WHEN 'ETH' THEN '花蓮' WHEN 'FTA' THEN '久堂' WHEN 'FTE' THEN '台東' ELSE '其他' END   ,INVENTORY_ITEM_ID--,ITEM_NO   ,UOM","SELECT PERIOD_NAME,TDATE,ORG_CODE   ,CASE ORG_CODE WHEN 'FTA' THEN '久堂' WHEN 'FTE' THEN '台東' WHEN 'ETH' THEN '花蓮' ELSE '其他' END STOCK_TYPE   ,CASE ORG_CODE WHEN 'FTA' THEN 1 WHEN 'FTE' THEN 2 WHEN 'ETH' THEN 3 ELSE 9 END STOCK_TYPE_SORT   ,INVENTORY_ITEM_ID--,ITEM_NO   ,UOM,SUM(QTY) QTY FROM (   --每月月底庫存資料   SELECT F.PERIOD_NAME,F.BALANCE_DATE TDATE   ,NVL(R.ORG_CODE_NEW,O.ORG_CODE) ORG_CODE   --,O.ORG_CODE ORG_CODE_Original   ,F.INVENTORY_ITEM_ID   --,I.ITEM_NUMBER ITEM_NO   --,F.SUB_INVENTORY   ,'MT' UOM,F.END_QTY / 1000 AS QTY   FROM W_YFY_INV_BALANCE_F F       ,w_chp_item_d I       ,W_YFY_ORG_D O       ,W_CHP_TS_BELONG_ORG_R R   WHERE AND F.ORGANIZATION_ID IN (290,291,305,286,287,288,289)     AND F.ORGANIZATION_ID = I.ORGANIZATION_ID AND F.INVENTORY_ITEM_ID = I.INVENTORY_ITEM_ID     AND F.ORGANIZATION_ID = O.ORG_ID     AND I.ITEM_NUMBER LIKE '4%' AND I.CATEGORY_CODE='FG' AND F.UOM='KG'     AND I.ITEM_DESC_TCH <> '漿塑盤'     AND NOT(F.SUB_INVENTORY  IN ('RM','MTL','SFG','SFGW','FG-PP','FG-PP1')           OR F.SUB_INVENTORY LIKE '%FGS%' )       AND R.ORG_CODE(+) = O.ORG_CODE AND R.SUBINVENTORY_CODE(+) = F.SUB_INVENTORY            AND F.PERIOD_NAME >= '2023/01'   UNION ALL   --當月1號期初庫存資料   SELECT TO_CHAR(CURRENT_DATE,'YYYY/MM') PERIOD_NAME, TO_DATE(TO_CHAR(CURRENT_DATE,'YYYY/MM') || '/01','YYYY/MM/DD' ) TDATE   ,NVL(R.ORG_CODE_NEW,O.ORG_CODE) ORG_CODE   --,O.ORG_CODE ORG_CODE_Original   ,F.INVENTORY_ITEM_ID   --,I.ITEM_NUMBER ITEM_NO   --,F.SUB_INVENTORY   ,'MT' UOM,F.END_QTY / 1000 AS QTY   FROM W_YFY_INV_BALANCE_F F       ,w_chp_item_d I       ,W_YFY_ORG_D O       ,W_CHP_TS_BELONG_ORG_R R   WHERE AND F.ORGANIZATION_ID IN (290,291,305,286,287,288,289)     AND F.ORGANIZATION_ID = I.ORGANIZATION_ID AND F.INVENTORY_ITEM_ID = I.INVENTORY_ITEM_ID     AND F.ORGANIZATION_ID = O.ORG_ID     AND I.ITEM_NUMBER LIKE '4%' AND I.CATEGORY_CODE='FG' AND F.UOM='KG'     AND I.ITEM_DESC_TCH <> '漿塑盤'     AND NOT(F.SUB_INVENTORY  IN ('RM','MTL','SFG','SFGW','FG-PP','FG-PP1')           OR F.SUB_INVENTORY LIKE '%FGS%' )       AND R.ORG_CODE(+) = O.ORG_CODE AND R.SUBINVENTORY_CODE(+) = F.SUB_INVENTORY            AND F.PERIOD_NAME = TO_CHAR(add_months(trunc(CURRENT_DATE,'mm'),-1),'YYYY/MM')     and to_char(CURRENT_DATE,'dd') <> '01'   UNION ALL     --當月每日庫存異動資料   SELECT F.PERIOD_NAME,TRUNC(F.TRANSACTION_DATE) TDATE   ,NVL(R.ORG_CODE_NEW,O.ORG_CODE) ORG_CODE   --,O.ORG_CODE ORG_CODE_Original   ,F.INVENTORY_ITEM_ID   --,I.ITEM_NUMBER ITEM_NO   --,F.SUB_INVENTORY   ,'MT' UOM,F.TRANSACTION_QTY / 1000 AS QTY   FROM W_CHP_MMT_F F       ,w_chp_item_d I       ,W_YFY_ORG_D O       ,W_CHP_TS_BELONG_ORG_R R   WHERE AND F.ORGANIZATION_ID IN (290,291,305,286,287,288,289)     AND F.ORGANIZATION_ID = I.ORGANIZATION_ID AND F.INVENTORY_ITEM_ID = I.INVENTORY_ITEM_ID     AND F.ORGANIZATION_ID = O.ORG_ID     AND I.ITEM_NUMBER LIKE '4%' AND I.CATEGORY_CODE='FG' AND F.TRANSACTION_UOM='KG'     AND I.ITEM_DESC_TCH <> '漿塑盤'     AND NOT(F.SUB_INVENTORY  IN ('RM','MTL','SFG','SFGW','FG-PP','FG-PP1')           OR F.SUB_INVENTORY LIKE '%FGS%' )       AND R.ORG_CODE(+) = O.ORG_CODE AND R.SUBINVENTORY_CODE(+) = F.SUB_INVENTORY            AND F.PERIOD_NAME = TO_CHAR(CURRENT_DATE,'YYYY/MM') and F.TRANSACTION_DATE < trunc(CURRENT_DATE)   )   GROUP BY PERIOD_NAME,TDATE,ORG_CODE   ,CASE ORG_CODE WHEN 'ETH' THEN '花蓮' WHEN 'FTA' THEN '久堂' WHEN 'FTE' THEN '台東' ELSE '其他' END   ,INVENTORY_ITEM_ID--,ITEM_NO   ,UOM","Result = {
+""Union1"" : ""
+Datasource = ['W_YFY_INV_BALANCE_F', 'w_chp_item_d', 'W_YFY_ORG_D', 'W_CHP_TS_BELONG_ORG_R']
+Filter = [
+    ""W_YFY_INV_BALANCE_F.ORGANIZATION_ID IN (290,291,305,286,287,288,289)"",
+    ""w_chp_item_d.ITEM_NUMBER LIKE '4%'"",
+    ""w_chp_item_d.CATEGORY_CODE = 'FG'"",
+    ""W_YFY_INV_BALANCE_F.UOM = 'KG'"",
+    ""w_chp_item_d.ITEM_DESC_TCH <> '漿塑盤'"",
+    ""NOT(W_YFY_INV_BALANCE_F.SUB_INVENTORY IN ('RM','MTL','SFG','SFGW','FG-PP','FG-PP1') OR W_YFY_INV_BALANCE_F.SUB_INVENTORY LIKE '%FGS%')"",
+    ""W_CHP_TS_BELONG_ORG_R.ORG_CODE(+) = W_YFY_ORG_D.ORG_CODE"",
+    ""W_CHP_TS_BELONG_ORG_R.SUBINVENTORY_CODE(+) = W_YFY_INV_BALANCE_F.SUB_INVENTORY"",
+    ""W_YFY_INV_BALANCE_F.PERIOD_NAME >= '2023/01'""
+]
+Join = [
+    ""W_YFY_INV_BALANCE_F.ORGANIZATION_ID = w_chp_item_d.ORGANIZATION_ID"",
+    ""W_YFY_INV_BALANCE_F.INVENTORY_ITEM_ID = w_chp_item_d.INVENTORY_ITEM_ID"",
+    ""W_YFY_INV_BALANCE_F.ORGANIZATION_ID = W_YFY_ORG_D.ORG_ID""
+]
+Groupby = {}"",
+""Union2"" : ""
+Datasource = ['W_YFY_INV_BALANCE_F', 'w_chp_item_d', 'W_YFY_ORG_D', 'W_CHP_TS_BELONG_ORG_R']
+Filter = [
+    ""W_YFY_INV_BALANCE_F.ORGANIZATION_ID IN (290,291,305,286,287,288,289)"",
+    ""w_chp_item_d.ITEM_NUMBER LIKE '4%'"",
+    ""w_chp_item_d.CATEGORY_CODE = 'FG'"",
+    ""W_YFY_INV_BALANCE_F.UOM = 'KG'"",
+    ""w_chp_item_d.ITEM_DESC_TCH <> '漿塑盤'"",
+    ""NOT(W_YFY_INV_BALANCE_F.SUB_INVENTORY IN ('RM','MTL','SFG','SFGW','FG-PP','FG-PP1') OR W_YFY_INV_BALANCE_F.SUB_INVENTORY LIKE '%FGS%')"",
+    ""W_CHP_TS_BELONG_ORG_R.ORG_CODE(+) = W_YFY_ORG_D.ORG_CODE"",
+    ""W_CHP_TS_BELONG_ORG_R.SUBINVENTORY_CODE(+) = W_YFY_INV_BALANCE_F.SUB_INVENTORY"",
+    ""W_YFY_INV_BALANCE_F.PERIOD_NAME = TO_CHAR(add_months(trunc(CURRENT_DATE, 'mm'), -1), 'YYYY/MM')"",
+    ""TO_CHAR(CURRENT_DATE, 'dd') <> '01'""
+]
+Join = [
+    ""W_YFY_INV_BALANCE_F.ORGANIZATION_ID = w_chp_item_d.ORGANIZATION_ID"",
+    ""W_YFY_INV_BALANCE_F.INVENTORY_ITEM_ID = w_chp_item_d.INVENTORY_ITEM_ID"",
+    ""W_YFY_INV_BALANCE_F.ORGANIZATION_ID = W_YFY_ORG_D.ORG_ID""
+]
+Groupby = {},
+""Union3:""
+Datasource = ['W_CHP_MMT_F', 'w_chp_item_d', 'W_YFY_ORG_D', 'W_CHP_TS_BELONG_ORG_R']
+Filter = [
+    ""W_CHP_MMT_F.ORGANIZATION_ID IN (290,291,305,286,287,288,289)"",
+    ""w_chp_item_d.ITEM_NUMBER LIKE '4%'"",
+    ""w_chp_item_d.CATEGORY_CODE = 'FG'"",
+    ""W_CHP_MMT_F.TRANSACTION_UOM = 'KG'"",
+    ""w_chp_item_d.ITEM_DESC_TCH <> '漿塑盤'"",
+    ""NOT(W_CHP_MMT_F.SUB_INVENTORY IN ('RM','MTL','SFG','SFGW','FG-PP','FG-PP1') OR W_CHP_MMT_F.SUB_INVENTORY LIKE '%FGS%')"",
+    ""W_CHP_TS_BELONG_ORG_R.ORG_CODE(+) = W_YFY_ORG_D.ORG_CODE"",
+    ""W_CHP_TS_BELONG_ORG_R.SUBINVENTORY_CODE(+) = W_CHP_MMT_F.SUB_INVENTORY"",
+    ""W_CHP_MMT_F.PERIOD_NAME = TO_CHAR(CURRENT_DATE, 'YYYY/MM')"",
+    ""W_CHP_MMT_F.TRANSACTION_DATE < TRUNC(CURRENT_DATE)""
+]
+Join = [
+    ""W_CHP_MMT_F.ORGANIZATION_ID = w_chp_item_d.ORGANIZATION_ID"",
+    ""W_CHP_MMT_F.INVENTORY_ITEM_ID = w_chp_item_d.INVENTORY_ITEM_ID"",
+    ""W_CHP_MMT_F.ORGANIZATION_ID = W_YFY_ORG_D.ORG_ID""
+]
+Groupby = {}"",
+""Final"":""
+Datasource = ['(All Union Tables)']
+Filter = []
+Join = []
+Groupby = [
+    ""PERIOD_NAME"",
+    ""TDATE"",
+    ""ORG_CODE"",
+    ""CASE ORG_CODE WHEN 'ETH' THEN '花蓮' WHEN 'FTA' THEN '久堂' WHEN 'FTE' THEN '台東' ELSE '其他' END"",
+    ""INVENTORY_ITEM_ID"",
+    ""UOM""
+]
+""
+""
+}"
+W_OSH_TARGET_NEW_V,"select ""PERIOD_YEAR"",""DATA_LEVEL"",""COUNTRY_ID"",""COUNTRY_NAME"",""INDUSTRY_ID"",""INDUSTRY_NAME"",""BUSINESS_ID"",""BUSINESS_NAME"",""COMPANY_ID"",""COMPANY_NAME"",""DEPT_ID"",""DEPT_NAME"",""OPERATION_ID"",""OPERATION_NAME"",""'FR'"",""'SR'"" from ( --1 select * from (SELECT     oshyyyy as PERIOD_YEAR,     data_level,     Trim(country_id) as country_id,     Trim(country_name) as country_name,     Trim(country_id) AS INDUSTRY_ID,     Trim(country_name) AS industry_name,     Trim(country_id) AS business_id,     Trim(country_name) AS business_name,     Trim(country_id) AS company_id,     Trim(country_name) AS company_name,     Trim(country_id) AS dept_id,     Trim(country_name) AS dept_name,     Trim(country_id) AS operation_id,     Trim(country_name) AS operation_name,     codeosh_target,     target_value FROM     w_osh_target_new_fs Where Data_Level='1' AND codeosh_target in ('FR','SR') )  pivot ( sum(TARGET_VALUE) for codeosh_target in ('FR','SR') )   union --2 select * from (SELECT     oshyyyy as PERIOD_YEAR,     data_level,     Trim(country_id) as country_id,     Trim(country_name) as country_name,     Trim(CODEOSH_INDUSTRY) AS INDUSTRY_ID,     Trim(industry_name) as industry_name,     Trim(CODEOSH_INDUSTRY) AS business_id,     Trim(industry_name) AS business_name,     Trim(CODEOSH_INDUSTRY) AS company_id,     Trim(industry_name) AS company_name,     Trim(CODEOSH_INDUSTRY) AS dept_id,     Trim(industry_name) AS dept_name,     Trim(CODEOSH_INDUSTRY) AS operation_id,     Trim(industry_name) AS operation_name,     codeosh_target,     target_value FROM     w_osh_target_new_fs Where Data_Level='2' AND codeosh_target in ('FR','SR') )  pivot ( sum(TARGET_VALUE) for codeosh_target in ('FR','SR') )   union --3 select * from (SELECT     oshyyyy as PERIOD_YEAR,     data_level,     Trim(country_id) as country_id,     Trim(country_name) as country_name,     Trim(CODEOSH_INDUSTRY) AS INDUSTRY_ID,     Trim(industry_name) as industry_name,     Trim(business_id) as business_id,     Trim(business_name) as business_name,     Trim(business_id) AS company_id,     Trim(business_name) AS company_name,     Trim(business_id) AS dept_id,     Trim(business_name) AS dept_name,     Trim(business_id) AS operation_id,     Trim(business_name) AS operation_name,     codeosh_target,     target_value FROM     w_osh_target_new_fs Where Data_Level='3' AND codeosh_target in ('FR','SR') )  pivot ( sum(TARGET_VALUE) for codeosh_target in ('FR','SR') )   union --4 select * from (SELECT     oshyyyy as PERIOD_YEAR,     data_level,     Trim(country_id) as country_id,     Trim(country_name) as country_name,     Trim(CODEOSH_INDUSTRY) AS INDUSTRY_ID,     Trim(industry_name) as industry_name,     Trim(business_id) as business_id,     Trim(business_name) as business_name,     Trim(company_id) as company_id,     Trim(company_name) as company_name,     Trim(company_id) AS dept_id,     Trim(company_name) AS dept_name,     Trim(company_id) AS operation_id,     Trim(company_name) AS operation_name,     codeosh_target,     target_value FROM     w_osh_target_new_fs Where Data_Level='4' AND codeosh_target in ('FR','SR') )  pivot ( sum(TARGET_VALUE) for codeosh_target in ('FR','SR') )   union --5 select * from (SELECT     oshyyyy as PERIOD_YEAR,     data_level,     Trim(country_id) as country_id,     Trim(country_name) as country_name,     Trim(CODEOSH_INDUSTRY) AS INDUSTRY_ID,     Trim(industry_name) as industry_name,     Trim(business_id) as business_id,     Trim(business_name) as business_name,     Trim(company_id) as company_id,     Trim(company_name) as company_name,     Trim(dept_id) as dept_id,     Trim(dept_name) as dept_name,     Trim(operation_id) as operation_id,     Trim(operation_name) as operation_name,     codeosh_target,     target_value FROM     w_osh_target_new_fs Where Data_Level='5'  AND codeosh_target in ('FR','SR') )  pivot ( sum(TARGET_VALUE) for codeosh_target in ('FR','SR') )  --ORDER BY PERIOD_YEAR,COUNTRY_ID, DEPT_ID  ) Alldata","select ""PERIOD_YEAR"",""DATA_LEVEL"",""COUNTRY_ID"",""COUNTRY_NAME"",""INDUSTRY_ID"",""INDUSTRY_NAME"",""BUSINESS_ID"",""BUSINESS_NAME"",""COMPANY_ID"",""COMPANY_NAME"",""DEPT_ID"",""DEPT_NAME"",""OPERATION_ID"",""OPERATION_NAME"",""'FR'"",""'SR'"" from ( --1 select * from (SELECT     oshyyyy as PERIOD_YEAR,     data_level,     Trim(country_id) as country_id,     Trim(country_name) as country_name,     Trim(country_id) AS INDUSTRY_ID,     Trim(country_name) AS industry_name,     Trim(country_id) AS business_id,     Trim(country_name) AS business_name,     Trim(country_id) AS company_id,     Trim(country_name) AS company_name,     Trim(country_id) AS dept_id,     Trim(country_name) AS dept_name,     Trim(country_id) AS operation_id,     Trim(country_name) AS operation_name,     codeosh_target,     target_value FROM     w_osh_target_new_fs Where Data_Level='1' AND codeosh_target in ('FR','SR') )  pivot ( sum(TARGET_VALUE) for codeosh_target in ('FR','SR') )   union --2 select * from (SELECT     oshyyyy as PERIOD_YEAR,     data_level,     Trim(country_id) as country_id,     Trim(country_name) as country_name,     Trim(CODEOSH_INDUSTRY) AS INDUSTRY_ID,     Trim(industry_name) as industry_name,     Trim(CODEOSH_INDUSTRY) AS business_id,     Trim(industry_name) AS business_name,     Trim(CODEOSH_INDUSTRY) AS company_id,     Trim(industry_name) AS company_name,     Trim(CODEOSH_INDUSTRY) AS dept_id,     Trim(industry_name) AS dept_name,     Trim(CODEOSH_INDUSTRY) AS operation_id,     Trim(industry_name) AS operation_name,     codeosh_target,     target_value FROM     w_osh_target_new_fs Where Data_Level='2' AND codeosh_target in ('FR','SR') )  pivot ( sum(TARGET_VALUE) for codeosh_target in ('FR','SR') )   union --3 select * from (SELECT     oshyyyy as PERIOD_YEAR,     data_level,     Trim(country_id) as country_id,     Trim(country_name) as country_name,     Trim(CODEOSH_INDUSTRY) AS INDUSTRY_ID,     Trim(industry_name) as industry_name,     Trim(business_id) as business_id,     Trim(business_name) as business_name,     Trim(business_id) AS company_id,     Trim(business_name) AS company_name,     Trim(business_id) AS dept_id,     Trim(business_name) AS dept_name,     Trim(business_id) AS operation_id,     Trim(business_name) AS operation_name,     codeosh_target,     target_value FROM     w_osh_target_new_fs Where Data_Level='3' AND codeosh_target in ('FR','SR') )  pivot ( sum(TARGET_VALUE) for codeosh_target in ('FR','SR') )   union --4 select * from (SELECT     oshyyyy as PERIOD_YEAR,     data_level,     Trim(country_id) as country_id,     Trim(country_name) as country_name,     Trim(CODEOSH_INDUSTRY) AS INDUSTRY_ID,     Trim(industry_name) as industry_name,     Trim(business_id) as business_id,     Trim(business_name) as business_name,     Trim(company_id) as company_id,     Trim(company_name) as company_name,     Trim(company_id) AS dept_id,     Trim(company_name) AS dept_name,     Trim(company_id) AS operation_id,     Trim(company_name) AS operation_name,     codeosh_target,     target_value FROM     w_osh_target_new_fs Where Data_Level='4' AND codeosh_target in ('FR','SR') )  pivot ( sum(TARGET_VALUE) for codeosh_target in ('FR','SR') )   union --5 select * from (SELECT     oshyyyy as PERIOD_YEAR,     data_level,     Trim(country_id) as country_id,     Trim(country_name) as country_name,     Trim(CODEOSH_INDUSTRY) AS INDUSTRY_ID,     Trim(industry_name) as industry_name,     Trim(business_id) as business_id,     Trim(business_name) as business_name,     Trim(company_id) as company_id,     Trim(company_name) as company_name,     Trim(dept_id) as dept_id,     Trim(dept_name) as dept_name,     Trim(operation_id) as operation_id,     Trim(operation_name) as operation_name,     codeosh_target,     target_value FROM     w_osh_target_new_fs Where Data_Level='5'  AND codeosh_target in ('FR','SR') )  pivot ( sum(TARGET_VALUE) for codeosh_target in ('FR','SR') )  --ORDER BY PERIOD_YEAR,COUNTRY_ID, DEPT_ID  ) Alldata","Result = {
+""Union1"" : ""
+Datasource = ['w_osh_target_new_fs']
+Filter = [
+    ""w_osh_target_new_fs.Data_Level = '1'"",
+    ""w_osh_target_new_fs.codeosh_target IN ('FR', 'SR')""
+]
+Join = []
+Groupby = {
+    ""pivot"": ""sum(TARGET_VALUE) for codeosh_target in ('FR', 'SR')""
+}"",
+""Union2"" : ""
+Datasource = ['w_osh_target_new_fs']
+Filter = [
+    ""w_osh_target_new_fs.Data_Level = '2'"",
+    ""w_osh_target_new_fs.codeosh_target IN ('FR', 'SR')""
+]
+Join = []
+Groupby = {
+    ""pivot"": ""sum(TARGET_VALUE) for codeosh_target in ('FR', 'SR')""
+}"",
+""Union3"" : ""
+Datasource = ['w_osh_target_new_fs']
+Filter = [
+    ""w_osh_target_new_fs.Data_Level = '3'"",
+    ""w_osh_target_new_fs.codeosh_target IN ('FR', 'SR')""
+]
+Join = []
+Groupby = {
+    ""pivot"": ""sum(TARGET_VALUE) for codeosh_target in ('FR', 'SR')""
+}"",
+""Union4"" : ""
+Datasource = ['w_osh_target_new_fs']
+Filter = [
+    ""w_osh_target_new_fs.Data_Level = '4'"",
+    ""w_osh_target_new_fs.codeosh_target IN ('FR', 'SR')""
+]
+Join = []
+Groupby = {
+    ""pivot"": ""sum(TARGET_VALUE) for codeosh_target in ('FR', 'SR')""
+}"",
+""Union5"" : ""
+Datasource = ['w_osh_target_new_fs']
+Filter = [
+    ""w_osh_target_new_fs.Data_Level = '5'"",
+    ""w_osh_target_new_fs.codeosh_target IN ('FR', 'SR')""
+]
+Join = []
+Groupby = {
+    ""pivot"": ""sum(TARGET_VALUE) for codeosh_target in ('FR', 'SR')""
+}"",
+""Final"":""
+Datasource = ['(All Union Tables)']
+Filter = []
+Join = []
+Groupby = []
+""
+}
+"
