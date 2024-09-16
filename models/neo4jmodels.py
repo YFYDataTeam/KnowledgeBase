@@ -15,7 +15,6 @@ class TableRel(StructuredRel):
     Define the relationships between tables
     Store the multiple filters as an array
     """
-    filter = ArrayProperty(StringProperty())
 
     from_base = RelationshipFrom('BaseTable', "FromBase")
     from_join = RelationshipFrom('JoinTable', "FromJoin")
@@ -30,7 +29,8 @@ class BaseTable(StructuredNode):
     The basic node for all tables
     """
 
-    name = StringProperty(required=True, uniqued_index=True)
+    name = StringProperty(uniqued_index=True)
+    filter = ArrayProperty(StringProperty())
 
 class JoinTable(BaseTable):
     """
@@ -56,10 +56,10 @@ class AggregatTable(BaseTable):
 
     syntax = StringProperty(required=True)
     
-    aggregate_from_base = RelationshipFrom('BaseTable', 'AggregateFromBase', model=TableRel)
-    aggregate_from_join = RelationshipFrom('JoinTable', 'AggregateFromJoin', model=TableRel)
-    aggregate_from_aggregate = RelationshipFrom('AggregatTable', 'AggregateFromAggregate', model=TableRel)
-    aggregate_from_union = RelationshipFrom('UnionTable', 'AggregateFromUnion', model=TableRel)
+    aggregate_from_base = RelationshipFrom('BaseTable', 'AggregateFromBase')
+    aggregate_from_join = RelationshipFrom('JoinTable', 'AggregateFromJoin')
+    aggregate_from_aggregate = RelationshipFrom('AggregatTable', 'AggregateFromAggregate')
+    aggregate_from_union = RelationshipFrom('UnionTable', 'AggregateFromUnion')
 
 class UnionTable(BaseTable):
     """
