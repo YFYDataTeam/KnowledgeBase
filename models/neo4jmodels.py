@@ -31,12 +31,13 @@ class BaseTable(StructuredNode):
 
     name = StringProperty(uniqued_index=True)
     filter = ArrayProperty(StringProperty())
+    join_condition = ArrayProperty(StringProperty())
 
 class JoinTable(BaseTable):
     """
     Define the result that join by two tables
     """
-
+    __label__ = 'JoinTable'
     join_from_base_1 = RelationshipFrom('BaseTable', 'JoinFromBase', model=TableRel)
     join_from_base_2 = RelationshipFrom('BaseTable', 'JoinFromBase', model=TableRel)
 
