@@ -16,13 +16,13 @@ class TableRel(StructuredRel):
     Store the multiple filters as an array
     """
 
-    from_base = RelationshipFrom('BaseTable', "FromBase")
-    from_join = RelationshipFrom('JoinTable', "FromJoin")
-    from_aggregate = RelationshipFrom('JoinTable', "FromAggregate")
+    from_base = StringProperty()
+    from_join = StringProperty()
+    from_aggregate = StringProperty()
 
-    union_base = Relationship('BaseTable', 'UnionBase')
-    union_join = Relationship('BaseTable', 'UnionJoin')
-    union_aggregate = Relationship('BaseTable', 'UnionAggregate')
+    union_base = StringProperty()
+    union_join = StringProperty()
+    union_aggregate = StringProperty()
 
 class BaseTable(StructuredNode):
     """
@@ -37,18 +37,15 @@ class JoinTable(BaseTable):
     """
     Define the result that join by two tables
     """
-    __label__ = 'JoinTable'
-    join_from_base_1 = RelationshipFrom('BaseTable', 'JoinFromBase', model=TableRel)
-    join_from_base_2 = RelationshipFrom('BaseTable', 'JoinFromBase', model=TableRel)
 
-    join_from_join_1 = RelationshipFrom('JoinTable', 'JoinFromJoin', model=TableRel)
-    join_from_join_2 = RelationshipFrom('JoinTable', 'JoinFromJoin', model=TableRel)
+    join_from_base = RelationshipFrom('BaseTable', 'JoinFromBase', model=TableRel)
 
-    join_from_aggregate_1 = RelationshipFrom('AggregatTable', 'JoinFromAggregated', model=TableRel)
-    join_from_aggregate_2 = RelationshipFrom('AggregatTable', 'JoinFromAggregated', model=TableRel)
+    join_from_join = RelationshipFrom('JoinTable', 'JoinFromJoin', model=TableRel)
 
-    join_from_union_1 = RelationshipFrom('UnionTable', 'JoinFromUnion', model=TableRel)
-    join_from_union_2 = RelationshipFrom('UnionTable', 'JoinFromUnion', model=TableRel)
+    join_from_aggregate = RelationshipFrom('AggregatTable', 'JoinFromAggregated', model=TableRel)
+
+    join_from_union = RelationshipFrom('UnionTable', 'JoinFromUnion', model=TableRel)
+
 
 class AggregatTable(BaseTable):
     """
