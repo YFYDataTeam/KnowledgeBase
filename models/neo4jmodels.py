@@ -76,6 +76,7 @@ class View(StructuredNode):
     The node for View in the DB
     """
     name = StringProperty(unique_index=True)
+    syntax = StringProperty()
 
     from_base_table = RelationshipFrom(BaseTable, 'FromBase', model=TableRel)
     from_aggregated_table = RelationshipFrom(AggregatTable, 'FromGroupby', model=TableRel)
