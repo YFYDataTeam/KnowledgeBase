@@ -1,7 +1,8 @@
+import pandas as pd
 import argparse
 from src.utils import read_config
-from src.enum import DBEnum, LineageType
-from src.sql_deconstruction import SqlDeconstructor
+from src.enum import DBEnum, LineageType, LlmType
+from src.sql_deconstruction import SQLDeconstructor
 from models.queries import bidb_test_query
 
 
@@ -17,10 +18,10 @@ def get_argument():
 
 if __name__ == '__main__':
     configs = read_config(".env/info.json")
-    llm_config = configs['AOAI']
     args = get_argument()
+    llm_type = LlmType.AOAI
 
-    sql_deconstructor = SqlDeconstructor(configs=llm_config)
+    sql_deconstructor = SQLDeconstructor(configs, llm_type)
 
     if args.DB.upper() == DBEnum.BIDB:
         query = bidb_test_query
@@ -36,6 +37,10 @@ if __name__ == '__main__':
         type = LineageType.DataSourceOnly
 
         desconstructed_sql = sql_deconstructor.run(db_name, query, test_case, type)
+
+        # desconstructed_sql.to_csv('./result/auto_result1.csv')
+
+        print('done')
 
     elif args.DB.upper() == DBEnum.DWDB:
         db_name = 'DWDB'

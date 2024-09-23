@@ -7,15 +7,17 @@ from langchain.prompts.chat import (
     HumanMessagePromptTemplate
 )
 
-from src.enum import DBEnum, LineageType
-from langchain.chat_models  import AzureChatOpenAI
+from src.enum import DBEnum, LineageType, LlmType
+from langchain_openai import AzureChatOpenAI
 
 import models.prompts as prompts
 
 
-class SqlDeconstructor:
-    def __init__(self, llm_configs):
-        self.llm_configs = llm_configs
+class SQLDeconstructor:
+    def __init__(self, configs, llm_type):
+        self.configs = configs
+        if llm_type == LlmType.AOAI:
+            self.llm_configs = configs['AOAI']
         
 
     def get_db_agent(self, db_name):
@@ -71,7 +73,7 @@ class SqlDeconstructor:
 
         CHAT_PROMPT = ChatPromptTemplate.from_messages(messages)
 
-        chain = CHAT_PROMPT | self.llm
+        chain = CHAT_PROMPT | llm
         for idx, row in data.iterrows():
             input_data = {
                 'table_name': row.view_name,
