@@ -317,3 +317,132 @@ GROUP BY PERIOD_NAME,TDATE,ORG_CODE
     datasource: {datasource}
 
 """
+
+
+PROMPT_ONLY_DATASOURCE="""
+ I will provide the table_name and the corresponing Oracle SQL. 
+    Identify all of the datasource used and return them without duplication.
+
+    Following is two example, give me the answer based on real case:
+Example1:
+### OracleSQL
+SELECT PERIOD_NAME,STOCK_DATE TDATE,ORG_CODE,'紙漿' STOCK_TYPE, 4 STOCK_TYPE_SORT
+  ,INVENTORY_ITEM_ID
+  ,UOM,QTY
+FROM W_FACTORY_INV_BALANCE_F
+UNION ALL
+SELECT PERIOD_NAME,STOCK_DATE TDATE,ORG_CODE,'紙漿' STOCK_TYPE, 4 STOCK_TYPE_SORT
+  ,INVENTORY_ITEM_ID
+  ,UOM,QTY
+FROM W_FACTORY_INV_F INV
+    ,(select max(stock_date) tdate from W_FACTORY_INV_F where ORG_CODE='ETH' AND MEMO='花蓮自製漿' AND PERIOD_NAME = to_char(CURRENT_DATE,'yyyy/mm') ) MS
+WHERE 1=1
+  and INV.STOCK_DATE = MS.TDATE
+  AND INV.ORG_CODE='ETH' 
+  AND INV.MEMO='花蓮自製漿'"
+
+### Result
+{{
+    "Union1": {{
+        "Datasource": ['W_FACTORY_INV_BALANCE_F']
+    }},
+    
+    "Union2": {{
+        "Datasource": ['W_FACTORY_INV_F']
+    }}
+}}
+
+Example2: In this case, there is a final part becasue the result of union is aggregated again, if the sql is not encapsulate by a groupby then don't include the final part. 
+### OracleSQL
+"SELECT PERIOD_NAME,TDATE,ORG_CODE
+  ,CASE ORG_CODE WHEN 'FTA' THEN '久堂' WHEN 'FTE' THEN '台東' WHEN 'ETH' THEN '花蓮' ELSE '其他' END STOCK_TYPE
+  ,CASE ORG_CODE WHEN 'FTA' THEN 1 WHEN 'FTE' THEN 2 WHEN 'ETH' THEN 3 ELSE 9 END STOCK_TYPE_SORT
+  ,INVENTORY_ITEM_ID--,ITEM_NO
+  ,UOM,SUM(QTY) QTY
+FROM (
+
+  SELECT F.PERIOD_NAME,F.BALANCE_DATE TDATE
+  ,NVL(R.ORG_CODE_NEW,O.ORG_CODE) ORG_CODE
+  ,F.INVENTORY_ITEM_ID
+  ,'MT' UOM,F.END_QTY / 1000 AS QTY
+  FROM W_YFY_INV_BALANCE_F F
+      ,w_chp_item_d I
+      ,W_YFY_ORG_D O
+      ,W_CHP_TS_BELONG_ORG_R R
+  WHERE 1=1
+    AND F.ORGANIZATION_ID IN (290,291,305,286,287,288,289)
+    AND F.ORGANIZATION_ID = I.ORGANIZATION_ID AND F.INVENTORY_ITEM_ID = I.INVENTORY_ITEM_ID
+    AND F.ORGANIZATION_ID = O.ORG_ID
+    AND I.ITEM_NUMBER LIKE '4%' AND I.CATEGORY_CODE='FG' AND F.UOM='KG'
+    AND I.ITEM_DESC_TCH <> '漿塑盤'
+    AND NOT(F.SUB_INVENTORY  IN ('RM','MTL','SFG','SFGW','FG-PP','FG-PP1') 
+         OR F.SUB_INVENTORY LIKE '%FGS%' )  
+    AND R.ORG_CODE(+) = O.ORG_CODE AND R.SUBINVENTORY_CODE(+) = F.SUB_INVENTORY       
+    AND F.PERIOD_NAME >= '2023/01'
+  UNION ALL
+
+  SELECT TO_CHAR(CURRENT_DATE,'YYYY/MM') PERIOD_NAME, TO_DATE(TO_CHAR(CURRENT_DATE,'YYYY/MM') || '/01','YYYY/MM/DD' ) TDATE
+  ,NVL(R.ORG_CODE_NEW,O.ORG_CODE) ORG_CODE
+  ,F.INVENTORY_ITEM_ID
+  ,'MT' UOM,F.END_QTY / 1000 AS QTY
+  FROM W_YFY_INV_BALANCE_F F
+      ,w_chp_item_d I
+      ,W_YFY_ORG_D O
+      ,W_CHP_TS_BELONG_ORG_R R
+  WHERE 1=1
+    AND F.ORGANIZATION_ID IN (290,291,305,286,287,288,289)
+    AND F.ORGANIZATION_ID = I.ORGANIZATION_ID AND F.INVENTORY_ITEM_ID = I.INVENTORY_ITEM_ID
+    AND F.ORGANIZATION_ID = O.ORG_ID
+    AND I.ITEM_NUMBER LIKE '4%' AND I.CATEGORY_CODE='FG' AND F.UOM='KG'
+    AND I.ITEM_DESC_TCH <> '漿塑盤'
+    AND NOT(F.SUB_INVENTORY  IN ('RM','MTL','SFG','SFGW','FG-PP','FG-PP1') 
+         OR F.SUB_INVENTORY LIKE '%FGS%' )  
+    AND R.ORG_CODE(+) = O.ORG_CODE AND R.SUBINVENTORY_CODE(+) = F.SUB_INVENTORY       
+    AND F.PERIOD_NAME = TO_CHAR(add_months(trunc(CURRENT_DATE,'mm'),-1),'YYYY/MM')
+    and to_char(CURRENT_DATE,'dd') <> '01'
+  UNION ALL  
+  SELECT F.PERIOD_NAME,TRUNC(F.TRANSACTION_DATE) TDATE
+  ,NVL(R.ORG_CODE_NEW,O.ORG_CODE) ORG_CODE
+  ,F.INVENTORY_ITEM_ID
+  ,'MT' UOM,F.TRANSACTION_QTY / 1000 AS QTY
+  FROM W_CHP_MMT_F F
+      ,w_chp_item_d I
+      ,W_YFY_ORG_D O
+      ,W_CHP_TS_BELONG_ORG_R R
+  WHERE 1=1
+    AND F.ORGANIZATION_ID IN (290,291,305,286,287,288,289)
+    AND F.ORGANIZATION_ID = I.ORGANIZATION_ID AND F.INVENTORY_ITEM_ID = I.INVENTORY_ITEM_ID
+    AND F.ORGANIZATION_ID = O.ORG_ID
+    AND I.ITEM_NUMBER LIKE '4%' AND I.CATEGORY_CODE='FG' AND F.TRANSACTION_UOM='KG'
+    AND I.ITEM_DESC_TCH <> '漿塑盤'
+    AND NOT(F.SUB_INVENTORY  IN ('RM','MTL','SFG','SFGW','FG-PP','FG-PP1') 
+         OR F.SUB_INVENTORY LIKE '%FGS%' )  
+    AND R.ORG_CODE(+) = O.ORG_CODE AND R.SUBINVENTORY_CODE(+) = F.SUB_INVENTORY       
+    AND F.PERIOD_NAME = TO_CHAR(CURRENT_DATE,'YYYY/MM') and F.TRANSACTION_DATE < trunc(CURRENT_DATE)
+  )  
+GROUP BY PERIOD_NAME,TDATE,ORG_CODE
+  ,CASE ORG_CODE WHEN 'ETH' THEN '花蓮' WHEN 'FTA' THEN '久堂' WHEN 'FTE' THEN '台東' ELSE '其他' END
+  ,INVENTORY_ITEM_ID--,ITEM_NO
+  ,UOM
+    
+### Result:
+{{
+    "Union1": {{
+        "Datasource": ['W_YFY_INV_BALANCE_F', 'w_chp_item_d', 'W_YFY_ORG_D', 'W_CHP_TS_BELONG_ORG_R'],
+    }},
+    
+    "Union2": {{
+        "Datasource": ['W_YFY_INV_BALANCE_F', 'w_chp_item_d', 'W_YFY_ORG_D', 'W_CHP_TS_BELONG_ORG_R'],
+    }},
+
+    "Union3": {{
+        "Datasource": ['W_CHP_MMT_F', 'w_chp_item_d', 'W_YFY_ORG_D', 'W_CHP_TS_BELONG_ORG_R'],
+    }}
+}}
+
+    Just export the result without any other description.
+    table_name: {table_name}
+
+    datasource: {datasource}
+
+"""
