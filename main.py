@@ -9,7 +9,8 @@ from tests.test_cases import BIDB_TEST_CASES
 
 def get_argument():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--DB', choices=[db_type.value for db_type in DBType], required=True, help="Choose the database type (DWDB or BIDB)")
+    # Enum is iterable, so we can specify the input by comprehension
+    parser.add_argument('--DB', choices=[db_type.value for db_type in DBType], required=True, help="Pass the valid DB.")
     # parser.add_grguemnt('--LineageType')
     # parser.add_arguemnt('--LLM')
 
@@ -28,7 +29,7 @@ if __name__ == '__main__':
             
         test_case = BIDB_TEST_CASES
         
-        db_name = 'BIDB'
+        db_name = DBType.BIDB
 
         type = LineageType.DataSourceOnly
 
@@ -39,6 +40,6 @@ if __name__ == '__main__':
         print('done')
 
     elif DBType(args.DB) == DBType.DWDB:
-        db_name = 'DWDB'
+        db_name = DBType.DWDB
         # sql_deconstructor.run(db_name, query, test_case)
 
