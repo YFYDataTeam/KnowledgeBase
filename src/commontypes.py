@@ -1,10 +1,12 @@
-class DBEnum:
+from enum import Enum
+
+class DBType(Enum):
     DWDB='DWDB'
     BIDB='BIDB'
 
-class LineageType:
+class LineageType(Enum):
     DataSourceOnly='DATASOURCEONLY'
     FullRelationship='FULLREL'
 
-class LlmType:
+class LlmType(Enum):
     AOAI='AOAI'

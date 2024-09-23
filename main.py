@@ -1,16 +1,16 @@
 import pandas as pd
 import argparse
 from src.utils import read_config
-from src.enum import DBEnum, LineageType, LlmType
+from src.commontypes import DBType, LineageType, LlmType
 from src.sql_deconstruction import SQLDeconstructor
 from models.queries import bidb_test_query
-
+from tests.test_cases import BIDB_TEST_CASES
 
 
 def get_argument():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--DB')
-    # parser.add_grguemnt('--JobType')
+    parser.add_argument('--DB', choices=[db_type.value for db_type in DBType], required=True, help="Choose the database type (DWDB or BIDB)")
+    # parser.add_grguemnt('--LineageType')
     # parser.add_arguemnt('--LLM')
 
     return parser.parse_args()
@@ -23,14 +23,10 @@ if __name__ == '__main__':
 
     sql_deconstructor = SQLDeconstructor(configs, llm_type)
 
-    if args.DB.upper() == DBEnum.BIDB:
+    if DBType(args.DB) == DBType.BIDB:
         query = bidb_test_query
             
-        test_case = ['C$_0W_YFY_AV_TW_R',
-                'C$_0W_YFY_IND_FIN_INFO_FS',
-                'OP_FACT_CHP_INVENTORY_ETH_PULP',
-                'OP_FACT_CHP_INVENTORY_REDEFINE',
-                'OP_FACT_CHP_SALES_DETAILS']
+        test_case = BIDB_TEST_CASES
         
         db_name = 'BIDB'
 
@@ -42,6 +38,7 @@ if __name__ == '__main__':
 
         print('done')
 
-    elif args.DB.upper() == DBEnum.DWDB:
+    elif DBType(args.DB) == DBType.DWDB:
         db_name = 'DWDB'
         # sql_deconstructor.run(db_name, query, test_case)
+
