@@ -1,13 +1,14 @@
 from src.utils import read_config, OracleAgent, MySQLAgent
-import re
+import re, json
 import pandas as pd
+import numpy as np
 from langchain.prompts.chat import (
     ChatPromptTemplate,
     SystemMessagePromptTemplate,
     HumanMessagePromptTemplate
 )
 
-from src.commontypes import DBType, LineageType, LlmType
+from src.commontypes import SourceType, LineageType, LlmType
 from langchain_openai import AzureChatOpenAI
 
 import models.prompts as prompts
@@ -22,9 +23,9 @@ class SQLDeconstructor:
 
     def get_db_agent(self, db_name):
 
-        if DBType(db_name) == DBType.DWDB:
+        if SourceType(db_name) == SourceType.DWDB:
             db_agent = OracleAgent(self.configs['DW_conn_info'])
-        elif DBType(db_name) == DBType.BIDB:
+        elif SourceType(db_name) == SourceType.BIDB:
             db_agent = OracleAgent(self.configs['BIDB_conn_info'])
 
         return db_agent
@@ -48,12 +49,12 @@ class SQLDeconstructor:
 
         return llm
 
-    def read_data(self, db_agent, query, test_case=None):
+    def sql_syntax_clean(self, data):
 
-        data = db_agent.read_table(query=query)
+        # data = db_agent.read_table(query=query)
 
-        if test_case:
-            data = data[data['view_name'].isin(test_case)]
+        # if test_case:
+        #     data = data[data['view_name'].isin(test_case)]
 
         # clean the original sql syntax
         data['text'] = data['text'].str.replace('\n', ' ')
@@ -85,17 +86,81 @@ class SQLDeconstructor:
 
 
         return data
+    
+    @staticmethod
+    def string_cleaning(raw_str):
+        """
+        Cleans a raw string to prepare it for json.loads() by removing escape sequences,
+        replacing single quotes with double quotes, and trimming extra spaces.
+        
+        Args:
+            raw_str (str): The raw JSON-like string with potential escape characters and improper formatting.
+        
+        Returns:
+            dict: A dictionary if the string is successfully parsed.
+            str: An error message if the string cannot be parsed.
+        """
+        try:
+            # Step 1: Remove escape sequences like \r, \n, and \t
+            cleaned_str = raw_str.replace('\r', '').replace('\n', '').replace('\t', '').replace('\\','')
 
-    def run(self, db_name, query, test_case, type):
+            # Step 2: Replace single quotes with double quotes
+            cleaned_str = cleaned_str.replace("'", '"')
 
-        db_agent = self.get_db_agent(db_name)
+            cleaned_str = cleaned_str.replace("```", '')
+            cleaned_str = cleaned_str.replace("json", '')
+
+            # Step 3: Optionally, remove any extra spaces (optional but for better readability)
+            cleaned_str = re.sub(r'\s+', ' ', cleaned_str)
+
+            # Step 4: Convert the cleaned string to a Python dictionary using json.loads
+            # result_dict = json.loads(cleaned_str)
+            return cleaned_str
+    
+        except json.JSONDecodeError as e:
+            # Return an error message if JSON decoding fails
+            return f"Failed to parse JSON: {e}"
+
+    def llm_result_correction(self, llm, data):
+
+        data['llm_fixed_lineage'] = ""
+
+        system_template = prompts.CORRECTION_PROMPT
+
+        messages = [
+            SystemMessagePromptTemplate.from_template(system_template),
+            HumanMessagePromptTemplate.from_template("{input_string}")
+        ]
+
+        CHAT_PROMPT = ChatPromptTemplate.from_messages(messages)    
+        chain = CHAT_PROMPT | llm
+
+        for idx, row in data.iterrows():
+            input_data = {
+                'input_string': row.lineage,
+            }
+            llm_response = chain.invoke(input_data)
+
+            data.at[idx, 'llm_fixed_lineage'] = llm_response.content
+
+        data['format_fixed_lineage'] = np.where(data['llm_fixed_lineage'] == 'nochange', data['lineage'], data['lineage'])
+        data['format_fixed_lineage'] = data['format_fixed_lineage'].apply(SQLDeconstructor.string_cleaning)
+
+        return data
+
+    def run(self, input_data, relationship_type):
+
+        # db_agent = self.get_db_agent(db_name)
+        # input_data = self.read_data(db_agent, query, test_case)
+
+        cleaned_input_data = self.sql_syntax_clean(input_data)
+
         llm = self.get_llm_agent(self.llm_configs)
-
-        if type == LineageType.DataSourceOnly:
+        if relationship_type == LineageType.DataSourceOnly:
             system_prompt = prompts.PROMPT_ONLY_DATASOURCE
 
-        input_data = self.read_data(db_agent, query, test_case)
+        desconstructed_sql = self.sql_deconstruction(cleaned_input_data, llm, system_prompt)
 
-        desconstructed_sql = self.sql_deconstruction(input_data, llm, system_prompt)
+        formatted_desconstructed_sql = self.llm_result_correction(llm, desconstructed_sql)
 
-        return desconstructed_sql
+        return formatted_desconstructed_sql
