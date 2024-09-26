@@ -44,11 +44,11 @@ def create_bidb_views_lineage(configs, llm_type):
 
     lineage_agent = LineageCronstructor(configs)
 
+    lineage_agent.run(desconstructed_sql)
+
     # for testing, delete all nodes at first
     # lineage_agent.clean_all_nodes()
     
-
-
 
 def create_erp_to_bidb_data_lineage(configs):
     """
@@ -72,8 +72,6 @@ def create_erp_to_bidb_data_lineage(configs):
 
         lineage_agent.connect_nodes(target_node, source_node)        
 
-    print('0')
-
 
 def create_erp_views_lineage(configs, llm_type):
 
@@ -94,5 +92,3 @@ def create_erp_views_lineage(configs, llm_type):
 
     lineage_agent.run(desconstructed_sql)
 
-
-    return
