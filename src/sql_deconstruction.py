@@ -56,13 +56,15 @@ class SQLDeconstructor:
         # if test_case:
         #     data = data[data['view_name'].isin(test_case)]
 
-        # clean the original sql syntax
-        data['text'] = data['text'].str.replace('\n', ' ')
-        data['text'] = data['text'].str.replace('\t', ' ')
-        data['input'] = data['text'].apply(lambda x:re.sub(r'1=1.*?(\s+|$)', '', x)) 
-        data['lineage'] = ''
+        data_copy = data.copy()
 
-        return data
+        # clean the original sql syntax
+        data_copy['text'] = data_copy['text'].str.replace('\n', ' ')
+        data_copy['text'] = data_copy['text'].str.replace('\t', ' ')
+        data_copy['input'] = data_copy['text'].apply(lambda x:re.sub(r'1=1.*?(\s+|$)', '', x)) 
+        data_copy['lineage'] = ''
+
+        return data_copy
 
     def sql_deconstruction(self, data: pd.DataFrame, llm, system_prompt):
 

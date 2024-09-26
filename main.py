@@ -1,13 +1,11 @@
 import pandas as pd
+import logging
 import argparse
 from src.utils import read_config
 from src.commontypes import JobType, LlmType
 from src.sql_deconstruction import SQLDeconstructor
 from models.queries import Queries
-from src.jobs import (
-    create_bidb_views_lineage, 
-    create_erp_to_bidb_data_lineage
-)
+from src.jobs import JobDispatcher
 
 
 def get_argument():
@@ -21,19 +19,15 @@ def get_argument():
     return parser.parse_args()
 
 
-if __name__ == '__main__':
+def main():
+    # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
     configs = read_config(".env/info.json")
     args = get_argument()
-    llm_type = LlmType.AOAI
 
-    if JobType(args.JobType) == JobType.BIVIEWS:
+    dispatcher = JobDispatcher(configs)
+    dispatcher.run_job(JobType[args.JobType])
 
-        create_bidb_views_lineage(configs, llm_type)
 
-        print('Lineage of Views in BIDB is created.')
-
-    elif JobType(args.JobType) == JobType.ERPTOBI:
-
-       create_erp_to_bidb_data_lineage(configs)
-
-        
+if __name__ == '__main__':
+    main()

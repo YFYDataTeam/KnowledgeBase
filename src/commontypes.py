@@ -3,10 +3,12 @@ from enum import Enum
 class JobType(Enum):
     BIVIEWS = 'BIVIEWS'
     ERPTOBI = 'ERPTOBI'
+    ERPVIEWS = 'ERPVIEWS'
 
-class SourceType(Enum):
-    DWDB = 'DWDB'
-    BIDB = 'BIDB'
+class DBType(Enum):
+    DW = 'DW'
+    BI = 'BI'
+    ERP = 'ERP'
     
 class LineageType(Enum):
     DataSourceOnly='DATASOURCEONLY'

@@ -1,13 +1,14 @@
 import json
 import pandas as pd
+from src.utils import OracleAgent
 from models.neo4jmodels import config, db, BI, ERP, JoinTable, AggregatTable, UnionTable, SourceTable
-from src.commontypes import TableType
-
+from src.commontypes import DBType, TableType
+from models.queries import Queries
 
 
 class LineageCronstructor:
     def __init__(self, configs) -> None:
-
+        self.configs = configs
         config.DATABASE_URL = configs['neo4jdb']
         self.db = db
 
@@ -46,6 +47,21 @@ class LineageCronstructor:
             return results_as_dict
         else:
             return None
+
+
+    def table_tye_check(self, db_type, table_name):
+
+        if db_type == DBType.BI:
+            sql_agent = OracleAgent(self.configs['BIDB_conn_info'])
+            query = Queries.BIDB_VIEWS_EQ(table_name)
+            result = sql_agent(query)
+            print(result)
+        elif db_type == DBType.ERP:
+            print(123)
+        elif db_type == DBType.DW:
+            print(12312)
+
+        pass
         
 
     def get_node(self, table_name, table_type):
@@ -53,19 +69,13 @@ class LineageCronstructor:
         Check if the table name belongs to the table_type and return it if it exists.
         Create it if it does not exist.
         """
+
+        table_type
+
         # Use getattr to dynamically access the class
         valid_type = TableType.get_table_type(table_name).name
         if not valid_type or valid_type != table_type:
             raise ValueError(f"Invalid or mismatched table type: {table_type} for table {table_name}")
-
-        # class_registry = {
-        #     'BI': BI,
-        #     'ERP': ERP,
-        #     'JoinTable': JoinTable,
-        #     'AggregatTable': AggregatTable,
-        #     'UnionTable': UnionTable,
-        #     'SourceTable': SourceTable,
-        # }
 
         table_class = globals().get(table_type)
         
@@ -111,6 +121,7 @@ class LineageCronstructor:
                 if source_name in join_rel:
                     join_result_node.join_from_base.connect(source_node, {'from_join': join_rel})
 
+
     def create_view_data_source(self, view_name, datasource_list, syntax):
         # create view node
         view_node = self.get_node(view_name, 'View')
@@ -123,6 +134,7 @@ class LineageCronstructor:
             
             view_node.is_parent_from.connect(table_node)
             table_node.is_child_to.connect(view_node)
+
 
     # Desconstruct all of the LLM result
     def result_destructure(self, view_name, input_string):
@@ -153,8 +165,7 @@ class LineageCronstructor:
             self.create_view_data_source(view_name, datasource_list)
 
     def run(self, data):
-        extracted_lineage = {}
-        for idx, row in data.iterrows():
+        for _, row in data.iterrows():
             
             self.result_destructure(row.view_name, row.format_fixed_lineage)
 

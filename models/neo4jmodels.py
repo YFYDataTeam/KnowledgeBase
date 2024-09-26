@@ -37,14 +37,14 @@ class SourceTable(StructuredNode):
 
     parent_from = RelationshipTo('SourceTable', 'Parent', model=TableRel)
 
-class BI(SourceTable):
+class BIsource(SourceTable):
     pass
 
-class ERP(SourceTable):
+class ERP_source(SourceTable):
     pass
 
 class JoinTable(SourceTable):
-    """
+    """ 
     Define the result that join by two tables
     """
 
@@ -92,3 +92,9 @@ class View(StructuredNode):
     from_aggregated_table = RelationshipFrom(AggregatTable, 'FromGroupby', model=TableRel)
     from_joined_table = RelationshipFrom(JoinTable, 'FromJoin', model=TableRel)
     from_union_table = RelationshipFrom(UnionTable, 'FROM_UNION', model=TableRel)
+
+class BIview(View):
+    pass
+
+class ERPview(View):
+    pass
