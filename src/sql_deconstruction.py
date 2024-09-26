@@ -8,7 +8,7 @@ from langchain.prompts.chat import (
     HumanMessagePromptTemplate
 )
 
-from src.commontypes import SourceType, LineageType, LlmType
+from src.commontypes import DBType, LineageType, LlmType
 from langchain_openai import AzureChatOpenAI
 
 import models.prompts as prompts
@@ -23,9 +23,9 @@ class SQLDeconstructor:
 
     def get_db_agent(self, db_name):
 
-        if SourceType(db_name) == SourceType.DWDB:
+        if DBType(db_name) == DBType.DWDB:
             db_agent = OracleAgent(self.configs['DW_conn_info'])
-        elif SourceType(db_name) == SourceType.BIDB:
+        elif DBType(db_name) == DBType.BIDB:
             db_agent = OracleAgent(self.configs['BIDB_conn_info'])
 
         return db_agent

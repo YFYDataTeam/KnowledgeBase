@@ -24,7 +24,7 @@ class TableRel(StructuredRel):
     union_join = StringProperty()
     union_aggregate = StringProperty()
 
-class SourceTable(StructuredNode):
+class Table(StructuredNode):
     """
     The basic node for all tables
     """
@@ -32,23 +32,25 @@ class SourceTable(StructuredNode):
     name = StringProperty(uniqued_index=True)
     filter = ArrayProperty(StringProperty())
     join_condition = ArrayProperty(StringProperty())
-    # child_to_view = Relationship('View', 'ChildtoView')
-    child_to = Relationship('SourceTable', 'Child', model=TableRel)
 
-    parent_from = RelationshipTo('SourceTable', 'Parent', model=TableRel)
+    child_to_table = Relationship('Table', 'Child', model=TableRel)
+    child_to_view = Relationship('View', 'Child', model=TableRel)
 
-class BIsource(SourceTable):
+    parent_from_table = RelationshipTo('Table', 'Parent', model=TableRel)
+    parent_from_view = RelationshipTo('View', 'Parent', model=TableRel)
+
+class BItable(Table):
     pass
 
-class ERP_source(SourceTable):
+class ERPtable(Table):
     pass
 
-class JoinTable(SourceTable):
+class JoinTable(Table):
     """ 
     Define the result that join by two tables
     """
 
-    join_from_source = RelationshipFrom('SourceTable', 'JoinFromsource', model=TableRel)
+    join_from_source = RelationshipFrom('Table', 'JoinFromsource', model=TableRel)
 
     join_from_join = RelationshipFrom('JoinTable', 'JoinFromJoin', model=TableRel)
 
@@ -57,19 +59,19 @@ class JoinTable(SourceTable):
     join_from_union = RelationshipFrom('UnionTable', 'JoinFromUnion', model=TableRel)
 
 
-class AggregatTable(SourceTable):
+class AggregatTable(Table):
     """
     The table which is aggregated by 'GROUP BY'
     """
 
     syntax = StringProperty(required=True)
     
-    aggregate_from_source = RelationshipFrom('SourceTable', 'AggregateFromsource')
+    aggregate_from_source = RelationshipFrom('Table', 'AggregateFromsource')
     aggregate_from_join = RelationshipFrom('JoinTable', 'AggregateFromJoin')
     aggregate_from_aggregate = RelationshipFrom('AggregatTable', 'AggregateFromAggregate')
     aggregate_from_union = RelationshipFrom('UnionTable', 'AggregateFromUnion')
 
-class UnionTable(SourceTable):
+class UnionTable(Table):
     """
     Represents the result of union operations between tables.
 
@@ -77,7 +79,7 @@ class UnionTable(SourceTable):
     or used in further operations.
     """
 
-    from_source_table = RelationshipTo(SourceTable, 'Fromsource', model=TableRel)
+    from_source_table = RelationshipTo(Table, 'Fromsource', model=TableRel)
     from_aggregated_table = RelationshipTo(AggregatTable, 'FromAggregated', model=TableRel)
     from_joined_table = RelationshipTo(JoinTable, 'FromJoin', model=TableRel)
 
@@ -88,7 +90,13 @@ class View(StructuredNode):
     name = StringProperty(unique_index=True)
     syntax = StringProperty()
 
-    # is_parent_from = RelationshipTo(SourceTable, 'IsParentOf', model=TableRel)
+    child_to_table = Relationship('Table', 'Child', model=TableRel)
+    child_to_view = Relationship('View', 'Child', model=TableRel)
+
+    parent_from_table = RelationshipTo('Table', 'Parent', model=TableRel)
+    parent_from_view = RelationshipTo('View', 'Parent', model=TableRel)
+
+    # is_parent_from = RelationshipTo(Table, 'IsParentOf', model=TableRel)
     from_aggregated_table = RelationshipFrom(AggregatTable, 'FromGroupby', model=TableRel)
     from_joined_table = RelationshipFrom(JoinTable, 'FromJoin', model=TableRel)
     from_union_table = RelationshipFrom(UnionTable, 'FROM_UNION', model=TableRel)

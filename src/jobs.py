@@ -1,5 +1,5 @@
 from models.queries import Queries
-from src.commontypes import JobType, LineageType, TableType, LlmType
+from src.commontypes import JobType, LineageType, DBType, LlmType
 from src.sql_deconstruction import SQLDeconstructor
 from tests.test_cases import BIDB_TEST_CASES
 from src.lineage_tools import LineageCronstructor
@@ -14,10 +14,12 @@ class JobDispatcher:
         if job_type == JobType.BIVIEWS:
             create_bidb_views_lineage(self.configs, llm_type=LlmType.AOAI)
         elif job_type == JobType.ERPTOBI:
+
             # create_erp_to_bidb_data_lineage(self.configs)
 
             create_erp_views_lineage(self.configs, llm_type=LlmType.AOAI)
 
+            print('done')
         else:
             raise ValueError({f'Unknown job type: {job_type}'})
 
@@ -26,6 +28,7 @@ def create_bidb_views_lineage(configs, llm_type):
 
     query = Queries.BIDB_TEST_QUERY.value
     test_case = BIDB_TEST_CASES
+
 
     sql_agent = OracleAgent(configs['BIDB_conn_info'])
     input_data = sql_agent.read_table(query=query)
@@ -61,17 +64,16 @@ def create_erp_to_bidb_data_lineage(configs):
     lineage_agent = LineageCronstructor(configs)
 
     # for testing, delete all nodes at first
-    # lineage_agent.clean_all_nodes()
+    lineage_agent.clean_all_nodes()
 
     for _, row in erp_to_bidb_relationship_data.iterrows():
-        target_type = TableType.get_table_type(row.target_table.upper()).name
-        source_type = TableType.get_table_type(row.source_table.upper()).name
+        # target_type = TableType.get_table_type(row.target_table.upper()).name
+        # source_type = TableType.get_table_type(row.source_table.upper()).name
 
-        target_node = lineage_agent.get_node(row.target_table, target_type)
-        source_node = lineage_agent.get_node(row.source_table, source_type)
+        target_node = lineage_agent.get_node(row.target_table, table_type=None)
+        source_node = lineage_agent.get_node(row.source_table, table_type=None)
 
-        target_node.child_to.connect(source_node)
-        source_node.parent_from.connect(target_node)
+        lineage_agent.connect_nodes(target_node, source_node)        
 
     print('0')
 
@@ -93,6 +95,7 @@ def create_erp_views_lineage(configs, llm_type):
 
     lineage_agent = LineageCronstructor(configs)
 
-    
+    lineage_agent.run(desconstructed_sql)
+
 
     return

@@ -19,13 +19,25 @@ class LlmType(Enum):
 
 
 class TableType(Enum):
-    BI = {'W'}
-    ERP = {'MTL', 'XXTPO'}
+
+    # BItable = 'BItable'
+    # BIview = 'BIview'
+    # ERPtable = 'ERPtable'
+    # ERPview = 'ERPview'
+
+    Table = 'Table'
+    View = 'View'
+
+class DBPrefix(Enum):
+
+    BI = {'W_'}
+    ERP = {}
 
     @staticmethod
-    def get_table_type(table_name):
-        for table_type in TableType:
-            if any(table_name.startswith(prefix) for prefix in table_type.value):
-                return table_type
-        
-        return None
+    def get_db_type(table_name):
+        for db_type in DBPrefix:
+            if db_type != DBPrefix.ERP: 
+                if any(table_name.startswith(prefix) for prefix in db_type.value):
+                    return db_type
+            
+        return DBPrefix.ERP
