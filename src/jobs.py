@@ -15,7 +15,7 @@ class JobDispatcher:
             create_bidb_views_lineage(self.configs, llm_type=LlmType.AOAI)
         elif job_type == JobType.ERPTOBI:
 
-            # create_erp_to_bidb_data_lineage(self.configs)
+            create_erp_to_bidb_data_lineage(self.configs)
 
             create_erp_views_lineage(self.configs, llm_type=LlmType.AOAI)
 
@@ -41,7 +41,6 @@ def create_bidb_views_lineage(configs, llm_type):
     sql_deconstructor = SQLDeconstructor(configs, llm_type)
 
     desconstructed_sql = sql_deconstructor.run(input_data, relationship_type)
-    # desconstructed_sql.to_csv('./result/auto_result1.csv')
 
     lineage_agent = LineageCronstructor(configs)
 
@@ -64,11 +63,9 @@ def create_erp_to_bidb_data_lineage(configs):
     lineage_agent = LineageCronstructor(configs)
 
     # for testing, delete all nodes at first
-    lineage_agent.clean_all_nodes()
+    # lineage_agent.clean_all_nodes()
 
     for _, row in erp_to_bidb_relationship_data.iterrows():
-        # target_type = TableType.get_table_type(row.target_table.upper()).name
-        # source_type = TableType.get_table_type(row.source_table.upper()).name
 
         target_node = lineage_agent.get_node(row.target_table, table_type=None)
         source_node = lineage_agent.get_node(row.source_table, table_type=None)

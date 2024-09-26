@@ -20,11 +20,6 @@ class LlmType(Enum):
 
 class TableType(Enum):
 
-    # BItable = 'BItable'
-    # BIview = 'BIview'
-    # ERPtable = 'ERPtable'
-    # ERPview = 'ERPview'
-
     Table = 'Table'
     View = 'View'
 
