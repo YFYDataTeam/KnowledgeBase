@@ -38,7 +38,7 @@ class MySQLAgent:
         df.columns = df.columns.str.lower()
 
         return df
-
+    
     def write_table(self, data, table_name, if_exists, index, data_type):
 
         data.to_sql(name=table_name, con=self.engine,
@@ -72,7 +72,6 @@ class OracleAgent:
         port = self.config['port']
         service_name = self.config['service_name']
         self.conn = create_engine(f'oracle+cx_oracle://{user}:{pw}@{host}:{port}/?service_name={service_name}')
-
 
     def read_table(self, query):
         # warnings.filterwarnings('ignore')
