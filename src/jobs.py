@@ -1,5 +1,5 @@
 from models.queries import Queries
-from src.commontypes import JobType, LineageType, DBType, LlmType
+from type_enums import JobType, LineageType, DBType, LlmType
 from src.sql_deconstruction import SQLDeconstructor
 from tests.test_cases import BIDB_TEST_CASES
 from src.lineage_tools import LineageCronstructor

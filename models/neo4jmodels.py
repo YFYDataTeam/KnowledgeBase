@@ -107,9 +107,25 @@ class BIview(View):
 class ERPview(View):
     pass
 
-class LoadPlan:
+
+
+########################################################################
+class LoadPlanRel(StructuredRel):
+
+    step_type = StringProperty()
+
+class LoadPlan(StructuredNode):
+    name = StringProperty(uniqued_index=True)
+    next_to = Relationship('LoadPlan', 'Next', model=LoadPlanRel)
+    previous_from = Relationship('LoadPlan', 'Previous', model=LoadPlanRel)
+
+class LoadPlanSE(LoadPlan):
     pass
 
+class LoadPlanPA(LoadPlan):
+    pass
+
+########################################################################
 class Scenario:
     pass
 

@@ -8,7 +8,7 @@ from langchain.prompts.chat import (
     HumanMessagePromptTemplate
 )
 
-from src.commontypes import DBType, LineageType, LlmType
+from type_enums import DBType, LineageType, LlmType
  
 
 import models.prompts as prompts

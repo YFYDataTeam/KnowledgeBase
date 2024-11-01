@@ -23,6 +23,10 @@ class TableType(Enum):
 
     Table = 'Table'
     View = 'View'
+    LoadPlan = 'LoadPlan'
+    
+    def __str__(self):
+        return self.value
 
 class DBPrefix(Enum):
 

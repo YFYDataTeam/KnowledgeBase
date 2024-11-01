@@ -2,7 +2,7 @@ import json
 import pandas as pd
 from src.utils import OracleAgent
 from models.neo4jmodels import config, db, BItable, ERPtable, BIview, ERPview
-from src.commontypes import DBType, TableType, DBPrefix
+from type_enums import DBType, TableType, DBPrefix
 from models.queries import Queries
 
 
@@ -86,13 +86,16 @@ class LineageCronstructor:
             else:
                 table_type = 'Table'
 
+        # elif table_type == TableType.LoadPlan:
+            
+
         db_table_type = db_type.upper() + table_type.lower()
         table_class = globals().get(db_table_type)
         return table_class
 
 
 
-    def get_node(self, table_name, db_type=None, table_type=None):
+    def get_or_create_node(self, target_name, db_type=None, node_type=None):
         """
         Check if the table name belongs to the table_type and return it if it exists.
         Create it if it does not exist.
@@ -102,16 +105,17 @@ class LineageCronstructor:
         # if not valid_type or valid_type != table_type:
         #     raise ValueError(f"Invalid or mismatched table type: {table_type} for table {table_name}")
 
-        table_class = self.get_table_class(table_name, table_type)
+        if node_type == None:
+            table_class = self.get_table_class(target_name, node_type)
 
         # table_class = globals().get(table_type)
         
         if table_class: 
-            table = table_class.nodes.get_or_none(name=table_name)
+            table = table_class.nodes.get_or_none(name=target_name)
             if table:
                 return table
             else:
-                return table_class(name=table_name, filter=[], join_condition=[]).save()
+                return table_class(name=target_name, filter=[], join_condition=[]).save()
 
     def connect_nodes(self, target_node, source_node):
         """
@@ -120,25 +124,12 @@ class LineageCronstructor:
         source_labels = source_node.labels()
         target_labels = target_node.labels()
 
-        if 'View' in target_labels and 'Table' in source_labels:
-            # Connect Table to View
+        if ['View','Table'] in target_labels and ['View','Table'] in source_labels:
             target_node.child_to_table.connect(source_node)
             source_node.parent_from_view.connect(target_node)
-
-        elif 'Table' in target_labels and 'View' in source_labels:
-            # Connect View to Table
-            target_node.child_to_view.connect(source_node)
-            source_node.parent_from_table.connect(target_node)
-
-        elif 'View' in target_labels and 'View' in source_labels:
-            # Connect View to View
-            target_node.child_to_view.connect(source_node)
-            source_node.parent_from_view.connect(target_node)
-
-        elif 'Table' in target_labels and 'Table' in source_labels:
-            # Connect Table to Table (though it seems you aren't currently using this)
-            target_node.child_to_table.connect(source_node)
-            source_node.parent_from_table.connect(target_node)
+        elif ['LoadPlan'] in source_labels:
+            target_node.next_to.connect(source_node)
+            source_node.previous_from.connect(target_node)
 
         else:
             raise ValueError(f"Unknown connection type between {source_labels} and {target_labels}")
@@ -151,7 +142,7 @@ class LineageCronstructor:
     #         join_result_name = str(parent_list[0]) + " Join " + str(parent_list[1])
 
     #         # get the filter which comes from the same parent table
-    #         join_result_node = self.get_node(join_result_name, 'JoinTable')
+    #         join_result_node = self.get_or_create_node(join_result_name, 'JoinTable')
 
         
     #         # check if the join relationship is existed
@@ -162,9 +153,9 @@ class LineageCronstructor:
 
     #         # create source table nodes
     #         joined_source_1_name = parent_list[0]
-    #         joined_source_1_node = self.get_node(joined_source_1_name, 'SourceTable')
+    #         joined_source_1_node = self.get_or_create_node(joined_source_1_name, 'SourceTable')
     #         joined_source_2_name = parent_list[1]
-    #         joined_source_2_node = self.get_node(joined_source_2_name, 'SourceTable')
+    #         joined_source_2_node = self.get_or_create_node(joined_source_2_name, 'SourceTable')
 
     #         # store the join condition in relationship
     #         join_source = [
@@ -179,13 +170,13 @@ class LineageCronstructor:
 
     def create_view_data_source(self, view_name, datasource_list):
         # create view node
-        view_node = self.get_node(view_name, table_type=None)
+        view_node = self.get_or_create_node(view_name, table_type=None)
         # view_node.syntax = syntax
         view_node.save()
 
         # create table node
         for table_name in datasource_list:
-            table_node = self.get_node(table_name, table_type=None)  
+            table_node = self.get_or_create_node(table_name, table_type=None)  
             
             self.connect_nodes(view_node, table_node)      
 
