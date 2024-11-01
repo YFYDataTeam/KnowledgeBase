@@ -90,5 +90,6 @@ def create_erp_views_lineage(configs, llm_type):
 
     lineage_agent = LineageCronstructor(configs)
 
+    #TODO: refactor the run function that move out the for-loop
     lineage_agent.run(desconstructed_sql)
 
