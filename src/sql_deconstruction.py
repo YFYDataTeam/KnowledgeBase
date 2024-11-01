@@ -9,7 +9,7 @@ from langchain.prompts.chat import (
 )
 
 from src.commontypes import DBType, LineageType, LlmType
-from langchain_openai import AzureChatOpenAI
+ 
 
 import models.prompts as prompts
 

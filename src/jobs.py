@@ -20,7 +20,7 @@ class JobDispatcher:
             create_erp_views_lineage(self.configs, llm_type=LlmType.AOAI)
 
             print('done')
-        else:
+        else: 
             raise ValueError({f'Unknown job type: {job_type}'})
 
 
