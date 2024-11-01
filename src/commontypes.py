@@ -4,6 +4,7 @@ class JobType(Enum):
     BIVIEWS = 'BIVIEWS'
     ERPTOBI = 'ERPTOBI'
     ERPVIEWS = 'ERPVIEWS'
+    LOADPLAN = 'LOADPLAN'
 
 class DBType(Enum):
     DW = 'DW'

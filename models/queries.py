@@ -36,3 +36,11 @@ class Queries(Enum):
     FROM all_v  iews
     WHERE view_name IN ('MTL_ITEM_CATEGORIES_V', 'MTL_ONHAND_QUANTITIES', 'XXTPO_BI_INFO_V', 'XXTPO_BI_RCV_INFO_V')
     """
+
+    GET_LOADPLAN_STEP_TEST = """
+    select *
+    from snp_lp_step
+    where i_load_plan = {loadplan_id}
+        --i_load_plan=45502 --and par_i_lp_step=676502
+    order by i_lp_step, nvl(par_i_lp_step,0), step_order
+    """

@@ -106,3 +106,14 @@ class BIview(View):
 
 class ERPview(View):
     pass
+
+class LoadPlan:
+    pass
+
+class Scenario:
+    pass
+
+class Interface:
+    pass
+class Package:
+    pass

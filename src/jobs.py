@@ -20,6 +20,10 @@ class JobDispatcher:
             create_erp_views_lineage(self.configs, llm_type=LlmType.AOAI)
 
             print('done')
+        elif job_type == JobType.LOADPLAN:
+            
+            create_loadplan_lineage(self.configs)
+
         else: 
             raise ValueError({f'Unknown job type: {job_type}'})
 
@@ -52,7 +56,7 @@ def create_bidb_views_lineage(configs, llm_type):
 
 def create_erp_to_bidb_data_lineage(configs):
     """
-    Since the relationship is orgainzed in a table, LLM is not needed.
+    Since the relationship is orgainzed in a table, LLM deconstruction is not needed.
     """
     dbconfig = configs['BIDB_conn_info']
     query = Queries.ODI_TEST_CASE.value
@@ -89,6 +93,15 @@ def create_erp_views_lineage(configs, llm_type):
     desconstructed_sql = sql_deconstructor.run(erp_views, relationship_type)
 
     lineage_agent = LineageCronstructor(configs)
-
+    
+    #TODO: refactor
     lineage_agent.run(desconstructed_sql)
 
+
+
+def create_loadplan_lineage(dbconfig, loadplan_id):
+
+    loadplan_agent = LoadPlanLineage(dbconfig, loadplan_id)
+
+
+    return print('done')
