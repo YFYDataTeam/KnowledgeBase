@@ -1,8 +1,9 @@
 from models.queries import Queries
-from type_enums import JobType, LineageType, DBType, LlmType
+from src.type_enums import JobType, LineageType, DBType, LlmType
 from src.sql_deconstruction import SQLDeconstructor
 from tests.test_cases import BIDB_TEST_CASES
 from src.lineage_tools import LineageCronstructor
+from src.loadplan_lineage import LoadPlanLineage
 from src.utils import OracleAgent
 
 
@@ -22,7 +23,7 @@ class JobDispatcher:
             print('done')
         elif job_type == JobType.LOADPLAN:
             
-            create_loadplan_lineage(self.configs)
+            create_loadplan_lineage(self.configs, loadplan_id='111502')
 
         else: 
             raise ValueError({f'Unknown job type: {job_type}'})
@@ -99,9 +100,17 @@ def create_erp_views_lineage(configs, llm_type):
 
 
 
-def create_loadplan_lineage(dbconfig, loadplan_id):
+def create_loadplan_lineage(config, loadplan_id):
 
-    loadplan_agent = LoadPlanLineage(dbconfig, loadplan_id)
+    query = Queries.GET_LOADPLAN_STEP_TEST.value
+
+    sql_agent = OracleAgent(config=config['ODI'])
+    loadlplan_table = sql_agent.read_table(query=query.format(loadplan_id=loadplan_id))
+    
+    loadplan_agent = LoadPlanLineage(config)
+
+    loadplan_agent.create_loadplan_lineage(loadplan_table=loadlplan_table)
+
 
 
     return print('done')

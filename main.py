@@ -2,7 +2,7 @@ import pandas as pd
 import logging
 import argparse
 from src.utils import read_config
-from type_enums import JobType, LlmType
+from src.type_enums import JobType, LlmType
 from src.sql_deconstruction import SQLDeconstructor
 from models.queries import Queries
 from src.jobs import JobDispatcher

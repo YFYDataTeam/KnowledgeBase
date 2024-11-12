@@ -131,5 +131,6 @@ class Scenario:
 
 class Interface:
     pass
+
 class Package:
     pass

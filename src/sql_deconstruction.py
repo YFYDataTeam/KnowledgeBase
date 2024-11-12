@@ -8,8 +8,8 @@ from langchain.prompts.chat import (
     HumanMessagePromptTemplate
 )
 
-from type_enums import DBType, LineageType, LlmType
- 
+from src.type_enums import DBType, LineageType, LlmType
+from langchain_openai import AzureChatOpenAI
 
 import models.prompts as prompts
 

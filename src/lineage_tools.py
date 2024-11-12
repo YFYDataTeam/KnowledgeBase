@@ -2,7 +2,7 @@ import json
 import pandas as pd
 from src.utils import OracleAgent
 from models.neo4jmodels import config, db, BItable, ERPtable, BIview, ERPview
-from type_enums import DBType, TableType, DBPrefix
+from src.type_enums import DBType, TableType, DBPrefix
 from models.queries import Queries
 
 
@@ -95,7 +95,7 @@ class LineageCronstructor:
 
 
 
-    def get_or_create_node(self, target_name, db_type=None, node_type=None):
+    def get_or_create_node(self, target_name, table_class=None, node_type=None):
         """
         Check if the table name belongs to the table_type and return it if it exists.
         Create it if it does not exist.
@@ -108,7 +108,7 @@ class LineageCronstructor:
         if node_type == None:
             table_class = self.get_table_class(target_name, node_type)
 
-        # table_class = globals().get(table_type)
+        # table_class = globals().get(table_class)
         
         if table_class: 
             table = table_class.nodes.get_or_none(name=target_name)
