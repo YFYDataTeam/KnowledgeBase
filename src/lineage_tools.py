@@ -2,7 +2,7 @@ import json
 import pandas as pd
 from src.utils import OracleAgent
 from models.neo4jmodels import config, db, BItable, ERPtable, BIview, ERPview
-from src.type_enums import DBType, TableType, DBPrefix
+from src.type_enums import DBType, ObjectType, DBPrefix
 from models.queries import Queries
 
 
@@ -68,9 +68,16 @@ class LineageCronstructor:
 
     #         pass
         
-    def get_table_class(self, table_name, table_type=None):
-        db_type = DBPrefix.get_db_type(table_name).name
-        if table_type == None:
+    def get_object_class(self, table_name, object_class=None):
+        """
+        Return the class defined in ObjectType enum.
+
+        If object type is unknow which means it could be Table or View.
+        Otherwise the object type belongs to LoadPlan, Scenario or Interface.
+        """
+
+        if object_class == None:
+            db_type = DBPrefix.get_db_type(table_name).name
             # if the table_name can be found in all_views then it's view, otherwise, table.
             bi_sql_agent = OracleAgent(self.configs['BIDB_conn_info'])
             biview_check_query = Queries.VIEWS_EQ.get_query(table_name)
@@ -82,40 +89,35 @@ class LineageCronstructor:
             dataguard_result = dataguard_sql_agent.read_table(dataguard_check_query)
 
             if not bi_result.empty or not dataguard_result.empty:
-                table_type = 'View'
+                object_class = 'View'
             else:
-                table_type = 'Table'
+                object_class = 'Table'
 
-        # elif table_type == TableType.LoadPlan:
-            
+            db_table_type = db_type.upper() + object_class.lower()
+            table_class = globals().get(db_table_type)
+            return table_class
+        
+        else:
+            return object_class
 
-        db_table_type = db_type.upper() + table_type.lower()
-        table_class = globals().get(db_table_type)
-        return table_class
 
 
-
-    def get_or_create_node(self, target_name, table_class=None, node_type=None):
+    def get_or_create_node(self, target_name, object_class=None):
         """
-        Check if the table name belongs to the table_type and return it if it exists.
+        Check if the table name belongs to the object_type and return it if it exists.
         Create it if it does not exist.
         """
-        # Use getattr to dynamically access the class
-        # valid_type = TableType.get_table_type(table_name).name
-        # if not valid_type or valid_type != table_type:
-        #     raise ValueError(f"Invalid or mismatched table type: {table_type} for table {table_name}")
 
-        if node_type == None:
-            table_class = self.get_table_class(target_name, node_type)
-
-        # table_class = globals().get(table_class)
+        if object_class == None:
+            object_class = self.get_object_class(target_name, object_class=None)
         
-        if table_class: 
-            table = table_class.nodes.get_or_none(name=target_name)
-            if table:
-                return table
+        else:
+            object = object_class.nodes.get_or_none(name=target_name)
+            if object:
+                return object
             else:
-                return table_class(name=target_name, filter=[], join_condition=[]).save()
+                return object_class(name=target_name).save()
+        
 
     def connect_nodes(self, target_node, source_node):
         """

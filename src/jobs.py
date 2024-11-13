@@ -4,9 +4,12 @@ from src.type_enums import JobType, LineageType, DBType, LlmType
 from src.sql_deconstruction import SQLDeconstructor
 from tests.test_cases import BIDB_TEST_CASES
 from src.lineage_tools import LineageCronstructor
+from src.view_lineage import ViewLineageCreator
 from src.loadplan_lineage import LoadPlanLineage
 from src.utils import OracleAgent
 from models.sql import QueryManager
+
+from src.odi_lineage import create_odi_lineage
 
 class JobDispatcher:
     def __init__(self, configs, sql_dir):
@@ -14,18 +17,21 @@ class JobDispatcher:
         self.qm = QueryManager(sql_dir)
 
     def run_job(self, job_type):
+
         if job_type == JobType.BIVIEWS:
+
             create_bidb_views_lineage(self.configs, llm_type=LlmType.AOAI)
+
         elif job_type == JobType.ERPTOBI:
 
             create_erp_to_bidb_data_lineage(self.configs)
 
             create_erp_views_lineage(self.configs, llm_type=LlmType.AOAI)
 
-            print('done')
+
         elif job_type == JobType.LOADPLAN:
             
-            create_loadplan_lineage(self.configs, self.qm, loadplan_id='111502')
+            create_odi_lineage(self.configs, self.qm, loadplan_id='111502')
 
         else: 
             raise ValueError({f'Unknown job type: {job_type}'})
@@ -49,9 +55,13 @@ def create_bidb_views_lineage(configs, llm_type):
 
     desconstructed_sql = sql_deconstructor.run(input_data, relationship_type)
 
-    lineage_agent = LineageCronstructor(configs)
+    lineage_agent = ViewLineageCreator(configs)
 
-    lineage_agent.run(desconstructed_sql)
+    for _, row in desconstructed_sql.iterrows():
+        
+        lineage_agent.result_destructure(row.view_name, row.format_fixed_lineage)
+
+    # lineage_agent.run(desconstructed_sql)
 
     # for testing, delete all nodes at first
     # lineage_agent.clean_all_nodes()
@@ -95,25 +105,9 @@ def create_erp_views_lineage(configs, llm_type):
 
     desconstructed_sql = sql_deconstructor.run(erp_views, relationship_type)
 
-    lineage_agent = LineageCronstructor(configs)
+    lineage_agent = ViewLineageCreator(configs)
     
-    #TODO: refactor
-    lineage_agent.run(desconstructed_sql)
+    for _, row in desconstructed_sql.iterrows():
+        
+        lineage_agent.result_destructure(row.view_name, row.format_fixed_lineage)
 
-
-
-def create_loadplan_lineage(config, qm, loadplan_id):
-    query = qm.get_loadplan_step_test
-
-    # query = Queries.GET_LOADPLAN_STEP_TEST.value
-
-    sql_agent = OracleAgent(config=config['ODI'])
-    loadlplan_table = sql_agent.read_table(query=query.format(loadplan_id=loadplan_id))
-    
-    loadplan_agent = LoadPlanLineage(config)
-
-    loadplan_agent.create_loadplan_lineage(loadplan_table=loadlplan_table)
-
-
-
-    return print('done')

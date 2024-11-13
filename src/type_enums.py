@@ -19,7 +19,7 @@ class LlmType(Enum):
     AOAI='AOAI'
 
 
-class TableType(Enum):
+class ObjectType(Enum):
 
     Table = 'Table'
     View = 'View'

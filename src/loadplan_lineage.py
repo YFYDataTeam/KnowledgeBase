@@ -2,7 +2,7 @@ import pandas as pd
 from models.queries import Queries
 from src.utils import OracleAgent
 from src.lineage_tools import LineageCronstructor
-from src.type_enums import TableType
+from src.type_enums import ObjectType
 from models.neo4jmodels import LoadPlanPA, LoadPlanSE
 
 class LoadPlanLineage(LineageCronstructor):
@@ -36,10 +36,10 @@ class LoadPlanLineage(LineageCronstructor):
             # get or create root node(loadplan id) if par_i_lp_step is null
             if pd.isnull(par_lp_step):
 
-                self.get_or_create_node(target_name=loadplan_id, table_class=LoadPlanSE, node_type=TableType.LoadPlan)
+                self.get_or_create_node(target_name=loadplan_id, table_class=LoadPlanSE, node_type=ObjectType.LoadPlan)
 
             else:
-                node_type = TableType.LoadPlan.value + lp_step_type
+                node_type = ObjectType.LoadPlan.value + lp_step_type
                 pa_node = self.get_or_create_node(target_name=lp_step_name, node_type=node_type)
 
             # get children step
@@ -47,12 +47,10 @@ class LoadPlanLineage(LineageCronstructor):
 
             # PA indicates parallel process
             if lp_step_type == 'PA':
-                node_class = TableType.LoadPlan.value + 'PA'
-                self.get_or_create_node(target_name='Parallel'+'_'+{loadplan_id}, table_class=node_class, node_type=TableType.LoadPlan)
+                self.get_or_create_node(target_name='PA'+'_'+{loadplan_id}, object_class=ObjectType.LoadPlan.__str__ + 'PA')
             
             if lp_step_type == 'RS':
-                node_class = TableType.LoadPlan.value + 'RS'
-                self.get_or_create_node(target_name=lp_step_name, table_class=node_class, node_type=TableType.LoadPlan)
+                self.get_or_create_node(target_name=lp_step_name, object_class=ObjectType.LoadPlan.__str__ + 'RS')
 
 
                 # self.connect_nodes(pa_node, node_class_next_step)
