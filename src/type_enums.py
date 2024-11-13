@@ -24,6 +24,8 @@ class ObjectType(Enum):
     Table = 'Table'
     View = 'View'
     LoadPlan = 'LoadPlan'
+    Package = 'Package'
+    Interface = 'Interface'
     
     def __str__(self):
         return self.value

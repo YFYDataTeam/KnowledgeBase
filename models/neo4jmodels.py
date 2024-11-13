@@ -112,12 +112,16 @@ class ERPview(View):
 ########################################################################
 class LoadPlanRel(StructuredRel):
 
-    step_type = StringProperty()
+    pass
 
 class LoadPlan(StructuredNode):
     name = StringProperty(uniqued_index=True)
-    next_to = Relationship('LoadPlan', 'Next', model=LoadPlanRel)
-    previous_from = Relationship('LoadPlan', 'Previous', model=LoadPlanRel)
+    next_step = Relationship('LoadPlan', 'Next', model=LoadPlanRel)
+    previous_step = Relationship('LoadPlan', 'Previous', model=LoadPlanRel)
+    
+    target_package = Relationship('Package', 'ToPackage', model=LoadPlanRel)
+    source_package = Relationship('Package', 'PackageFrom', model=LoadPlanRel)
+
 
 class LoadPlanSE(LoadPlan):
     pass
@@ -126,11 +130,17 @@ class LoadPlanPA(LoadPlan):
     pass
 
 ########################################################################
-class Scenario:
-    pass
+
+class Package(StructuredNode):
+    name = StringProperty(uniqued_index=True)
+
+    next_interface = Relationship('Interface', 'NextToInterface', model=LoadPlanRel)
+    loadplan_source = Relationship('LoadPlan', 'ComesFromLoadPlan', model=LoadPlanRel)
+class Scenario(StructuredNode):
+    name = StringProperty(uniqued_index=True)
+
+    next_interface = Relationship('Interface', 'NextToInterface', model=LoadPlanRel)
+    loadplan_source = Relationship('LoadPlan', 'ComesFromLoadPlan', model=LoadPlanRel)
 
 class Interface:
-    pass
-
-class Package:
-    pass
+    name = StringProperty(uniqued_index=True)

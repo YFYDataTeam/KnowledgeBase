@@ -1,25 +1,54 @@
 import pandas as pd
-from src.type_enums import JobType, LineageType, DBType, LlmType
+from src.type_enums import ObjectType
 from src.lineage_tools import LineageCronstructor
 from src.view_lineage import ViewLineageCreator
 from src.loadplan_lineage import LoadPlanLineage
 from src.utils import OracleAgent
 from models.sql import QueryManager
 
+from models.neo4jmodels import LoadPlanSE
 
 
 
-def create_loadplan_lineage(config, qm, loadlplan_table):
+def create_loadplan_lineage(config, qm, loadplan_table):
     query = qm.get_loadplan_step_test
 
     # query = Queries.GET_LOADPLAN_STEP_TEST.value
 
 
     
-    loadplan_agent = LoadPlanLineage(config)
+    loadplan_agent = LineageCronstructor(config)
 
-    loadplan_agent.create_loadplan_lineage(loadplan_table=loadlplan_table)
+    for _, row in loadplan_table.iterrows():
+        
+        loadplan_id = row['i_load_plan']
+        lp_step = row['i_lp_step']
+        lp_step_name = row['lp_step_name']
+        par_lp_step = row['par_i_lp_step']
+        lp_step_type = row['lp_step_type']
 
+        # get or create root node(loadplan id) if par_i_lp_step is null
+        if pd.isnull(par_lp_step):
+
+            loadplan_agent.get_or_create_node(target_name=loadplan_id, node_type=ObjectType.LoadPlan)
+
+        # create PA, which indicates parallel processn node
+        if lp_step_type == 'PA':
+            loadplan_agent.get_or_create_node(target_name='PA'+'_'+{loadplan_id}, object_class=ObjectType.LoadPlan.__str__ + 'PA')
+
+
+            # get the node in previous step
+            
+            # create relationship between current and previous
+        
+        # create package(scenario) node
+        if lp_step_type == 'RS':
+            loadplan_agent.get_or_create_node(target_name=lp_step_name, object_class=ObjectType.Package)
+
+
+            # get the node in previous step
+            
+            # create relationship between current and previous
 
 
     return print('done')
@@ -62,12 +91,16 @@ def get_etl_info(config, qm, loadplan_id):
 
         df_scenario_steps = pd.concat([df_scenario_steps, df_scen_steps], axis=0)
 
-    return loadlplan_table, df_scenario_steps
+    return loadplan_table, df_scenario_steps
 
 
 def create_odi_lineage(config, qm, loadplan_id):
 
-    loadlplan_table, df_scenario_steps = get_etl_info(config, qm, loadplan_id)
+    loadplan_table, df_scenario_steps = get_etl_info(config, qm, loadplan_id)
+
+    # create loadplan lineages
+
+    # create sceanrio lineages
 
 
     return 
