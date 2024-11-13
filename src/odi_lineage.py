@@ -10,14 +10,9 @@ from models.neo4jmodels import LoadPlanSE
 
 
 
-def create_loadplan_lineage(config, qm, loadplan_table):
-    query = qm.get_loadplan_step_test
+def create_loadplan_lineage(config, loadplan_table):
 
-    # query = Queries.GET_LOADPLAN_STEP_TEST.value
-
-
-    
-    loadplan_agent = LineageCronstructor(config)
+    agent = LineageCronstructor(config)
 
     for _, row in loadplan_table.iterrows():
         
@@ -30,11 +25,11 @@ def create_loadplan_lineage(config, qm, loadplan_table):
         # get or create root node(loadplan id) if par_i_lp_step is null
         if pd.isnull(par_lp_step):
 
-            loadplan_agent.get_or_create_node(target_name=loadplan_id, node_type=ObjectType.LoadPlan)
+            agent.get_or_create_node(target_name=loadplan_id, node_type=ObjectType.LoadPlan.__str__)
 
         # create PA, which indicates parallel processn node
         if lp_step_type == 'PA':
-            loadplan_agent.get_or_create_node(target_name='PA'+'_'+{loadplan_id}, object_class=ObjectType.LoadPlan.__str__ + 'PA')
+            agent.get_or_create_node(target_name='PA'+'_'+{loadplan_id}, object_class=ObjectType.LoadPlan.__str__ + 'PA')
 
 
             # get the node in previous step
@@ -43,7 +38,7 @@ def create_loadplan_lineage(config, qm, loadplan_table):
         
         # create package(scenario) node
         if lp_step_type == 'RS':
-            loadplan_agent.get_or_create_node(target_name=lp_step_name, object_class=ObjectType.Package)
+            agent.get_or_create_node(target_name=lp_step_name, object_class=ObjectType.Package.__str__)
 
 
             # get the node in previous step
@@ -59,11 +54,11 @@ def get_etl_info(config, qm, loadplan_id):
     sql_agent = OracleAgent(config=config['ODI'])
     lp_query = qm.get_loadplan_step_test
 
-    loadlplan_table = sql_agent.read_table(query=lp_query.format(loadplan_id=loadplan_id))
+    loadplan_table = sql_agent.read_table(query=lp_query.format(loadplan_id=loadplan_id))
 
     # package dict
     scen_list = []
-    for _, row in loadlplan_table[loadlplan_table['lp_step_type'] == 'RS'].iterrows():
+    for _, row in loadplan_table[loadplan_table['lp_step_type'] == 'RS'].iterrows():
         scen_dict = {}
         loadplan_id = row['i_load_plan']
         scen_name = row['scen_name']
@@ -99,6 +94,7 @@ def create_odi_lineage(config, qm, loadplan_id):
     loadplan_table, df_scenario_steps = get_etl_info(config, qm, loadplan_id)
 
     # create loadplan lineages
+    create_loadplan_lineage(config, loadplan_table)
 
     # create sceanrio lineages
 
