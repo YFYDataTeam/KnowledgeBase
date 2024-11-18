@@ -142,5 +142,5 @@ class Scenario(StructuredNode):
     next_interface = Relationship('Interface', 'NextToInterface', model=LoadPlanRel)
     loadplan_source = Relationship('LoadPlan', 'ComesFromLoadPlan', model=LoadPlanRel)
 
-class Interface:
+class Interface(StructuredNode):
     name = StringProperty(uniqued_index=True)

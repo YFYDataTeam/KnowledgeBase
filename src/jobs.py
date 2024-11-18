@@ -1,5 +1,5 @@
 import os
-from models.queries import Queries
+from modules.queries import Queries
 from src.type_enums import JobType, LineageType, DBType, LlmType
 from src.sql_deconstruction import SQLDeconstructor
 from tests.test_cases import BIDB_TEST_CASES
@@ -7,7 +7,7 @@ from src.lineage_tools import LineageCronstructor
 from src.view_lineage import ViewLineageCreator
 from src.loadplan_lineage import LoadPlanLineage
 from src.utils import OracleAgent
-from models.sql import QueryManager
+from modules.sql import QueryManager
 
 from src.odi_lineage import create_odi_lineage
 

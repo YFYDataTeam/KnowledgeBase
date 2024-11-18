@@ -1,9 +1,22 @@
 import json
 import pandas as pd
+import importlib
 from src.utils import OracleAgent
-from models.neo4jmodels import config, db, BItable, ERPtable, BIview, ERPview
+from modules.neo4jmodels import (
+    config, 
+    db, 
+    # BItable, 
+    # ERPtable, 
+    # BIview, 
+    # ERPview, 
+    # LoadPlan, 
+    # LoadPlanSE, 
+    # LoadPlanPA,
+    # Package,
+    # Scenario
+)
 from src.type_enums import DBType, ObjectType, DBPrefix
-from models.queries import Queries
+from modules.queries import Queries
 
 
 class LineageCronstructor:
@@ -50,23 +63,16 @@ class LineageCronstructor:
             return None
 
 
-    # def table_tye_check(self, db_type, table_name, table_type=None):
-    #     if table_type:
-    #         if self.db_type == DBType.BI:
-    #             sql_agent = OracleAgent(self.configs['BIDB_conn_info'])
-    #             query = Queries.BIDB_VIEWS_EQ.get_query(table_name)
-    #             result = sql_agent.read_table(query)
-    #             if result.empty:
-    #                 return BItable
-    #             else:
-    #                 return BIview
-                
-    #         elif self.db_type == DBType.ERP:
-    #             print(123)
-    #         elif self.db_type == DBType.DW:
-    #             print(12312)
-
-    #         pass
+    def get_model_class(self, class_name):
+        """
+        Dynamically imports and returns the class from models.neo4jmodels.
+        """
+        try:
+            module = importlib.import_module("modules.neo4jmodels")
+            return getattr(module, class_name, None)
+        except ImportError as e:
+            raise ImportError(f"Error importing {class_name}: {e}")
+        
         
     def get_object_class(self, table_name, object_class=None):
         """
@@ -94,11 +100,12 @@ class LineageCronstructor:
                 object_class = 'Table'
 
             db_table_type = db_type.upper() + object_class.lower()
-            table_class = globals().get(db_table_type)
+            table_class = self.get_model_class(db_table_type)
+            # table_class = globals().get(db_table_type)
             return table_class
         
         else:
-            return object_class
+            return self.get_model_class(object_class)
 
 
 
@@ -107,17 +114,16 @@ class LineageCronstructor:
         Check if the table name belongs to the object_type and return it if it exists.
         Create it if it does not exist.
         """
+       
+        # object_class is None which means we don't sure it's View or Table.
+        object = self.get_object_class(target_name, object_class)
+        object_node = object.nodes.get_or_none(name=target_name)
 
-        if object_class == None:
-            object_class = self.get_object_class(target_name, object_class=None)
-        
+        if object_node:
+            return object_node
         else:
-            object = object_class.nodes.get_or_none(name=target_name)
-            if object:
-                return object
-            else:
-                return object_class(name=target_name).save()
-        
+            return object(name=target_name).save()
+    
 
     def connect_nodes(self, target_node, source_node):
         """

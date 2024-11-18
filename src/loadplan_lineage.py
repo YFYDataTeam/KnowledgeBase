@@ -1,9 +1,9 @@
 import pandas as pd
-from models.queries import Queries
+from modules.queries import Queries
 from src.utils import OracleAgent
 from src.lineage_tools import LineageCronstructor
 from src.type_enums import ObjectType
-from models.neo4jmodels import LoadPlanPA, LoadPlanSE
+from modules.neo4jmodels import LoadPlanPA, LoadPlanSE
 
 class LoadPlanLineage(LineageCronstructor):
 

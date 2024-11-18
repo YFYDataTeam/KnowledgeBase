@@ -4,9 +4,7 @@ from src.lineage_tools import LineageCronstructor
 from src.view_lineage import ViewLineageCreator
 from src.loadplan_lineage import LoadPlanLineage
 from src.utils import OracleAgent
-from models.sql import QueryManager
-
-from models.neo4jmodels import LoadPlanSE
+from modules.sql import QueryManager
 
 
 
@@ -25,11 +23,12 @@ def create_loadplan_lineage(config, loadplan_table):
         # get or create root node(loadplan id) if par_i_lp_step is null
         if pd.isnull(par_lp_step):
 
-            agent.get_or_create_node(target_name=loadplan_id, node_type=ObjectType.LoadPlan.__str__)
+            agent.get_or_create_node(target_name=loadplan_id, object_class=ObjectType.LoadPlan.__str__())
 
         # create PA, which indicates parallel processn node
         if lp_step_type == 'PA':
-            agent.get_or_create_node(target_name='PA'+'_'+{loadplan_id}, object_class=ObjectType.LoadPlan.__str__ + 'PA')
+            target_name = 'PA'+'_'+ str(loadplan_id)
+            agent.get_or_create_node(target_name=target_name, object_class=ObjectType.LoadPlan.__str__() + 'PA')
 
 
             # get the node in previous step
@@ -38,7 +37,7 @@ def create_loadplan_lineage(config, loadplan_table):
         
         # create package(scenario) node
         if lp_step_type == 'RS':
-            agent.get_or_create_node(target_name=lp_step_name, object_class=ObjectType.Package.__str__)
+            agent.get_or_create_node(target_name=lp_step_name, object_class=ObjectType.Package.__str__())
 
 
             # get the node in previous step

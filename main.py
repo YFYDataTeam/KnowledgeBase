@@ -5,7 +5,7 @@ import argparse
 from src.utils import read_config
 from src.type_enums import JobType, LlmType
 from src.sql_deconstruction import SQLDeconstructor
-from models.queries import Queries
+from modules.queries import Queries
 from src.jobs import JobDispatcher
 
 
