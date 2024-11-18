@@ -115,12 +115,13 @@ class LoadPlanRel(StructuredRel):
     pass
 
 class LoadPlan(StructuredNode):
-    name = StringProperty(uniqued_index=True)
-    next_step = Relationship('LoadPlan', 'Next', model=LoadPlanRel)
-    previous_step = Relationship('LoadPlan', 'Previous', model=LoadPlanRel)
+    name= StringProperty(uniqued_index=True)
+    step_id = StringProperty(unique_index=True)
+    next_to = Relationship('LoadPlan', 'Next')
+    previous_from = Relationship('LoadPlan', 'Previous')
     
-    target_package = Relationship('Package', 'ToPackage', model=LoadPlanRel)
-    source_package = Relationship('Package', 'PackageFrom', model=LoadPlanRel)
+    to_scenario = Relationship('Scenario', 'ToScenario', model=LoadPlanRel)
+    scenario_from = Relationship('Scenario', 'ScenarioFrom', model=LoadPlanRel)
 
 
 class LoadPlanSE(LoadPlan):
@@ -131,16 +132,20 @@ class LoadPlanPA(LoadPlan):
 
 ########################################################################
 
-class Package(StructuredNode):
-    name = StringProperty(uniqued_index=True)
+# class Package(StructuredNode):
+#     name = StringProperty(uniqued_index=True)
+#     pkg_id = StringProperty(unique_index=True)
 
-    next_interface = Relationship('Interface', 'NextToInterface', model=LoadPlanRel)
-    loadplan_source = Relationship('LoadPlan', 'ComesFromLoadPlan', model=LoadPlanRel)
+#     next_interface = Relationship('Interface', 'NextToInterface', model=LoadPlanRel)
+#     loadplan_source = Relationship('LoadPlan', 'ComesFromLoadPlan', model=LoadPlanRel)
+
 class Scenario(StructuredNode):
     name = StringProperty(uniqued_index=True)
+    step_id = StringProperty(unique_index=True)
+    scen_name = StringProperty(unique_index=True)
 
     next_interface = Relationship('Interface', 'NextToInterface', model=LoadPlanRel)
-    loadplan_source = Relationship('LoadPlan', 'ComesFromLoadPlan', model=LoadPlanRel)
+    from_loadplan = Relationship('LoadPlan', 'ComesFromLoadPlan', model=LoadPlanRel)
 
 class Interface(StructuredNode):
     name = StringProperty(uniqued_index=True)

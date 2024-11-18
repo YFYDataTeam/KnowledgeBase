@@ -25,6 +25,7 @@ class ObjectType(Enum):
     View = 'View'
     LoadPlan = 'LoadPlan'
     Package = 'Package'
+    Scenario = 'Scenario'
     Interface = 'Interface'
     
     def __str__(self):

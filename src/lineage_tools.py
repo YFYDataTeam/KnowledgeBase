@@ -74,7 +74,7 @@ class LineageCronstructor:
             raise ImportError(f"Error importing {class_name}: {e}")
         
         
-    def get_object_class(self, table_name, object_class=None):
+    def get_object_class(self, target_name, object_class=None):
         """
         Return the class defined in ObjectType enum.
 
@@ -83,15 +83,15 @@ class LineageCronstructor:
         """
 
         if object_class == None:
-            db_type = DBPrefix.get_db_type(table_name).name
+            db_type = DBPrefix.get_db_type(target_name).name
             # if the table_name can be found in all_views then it's view, otherwise, table.
             bi_sql_agent = OracleAgent(self.configs['BIDB_conn_info'])
-            biview_check_query = Queries.VIEWS_EQ.get_query(table_name)
+            biview_check_query = Queries.VIEWS_EQ.get_query(target_name)
             bi_result = bi_sql_agent.read_table(biview_check_query)
 
             # dataguard is the DB to store the data from ERP
             dataguard_sql_agent = OracleAgent(self.configs['Data_guard'])
-            dataguard_check_query = Queries.VIEWS_EQ.get_query(table_name)
+            dataguard_check_query = Queries.VIEWS_EQ.get_query(target_name)
             dataguard_result = dataguard_sql_agent.read_table(dataguard_check_query)
 
             if not bi_result.empty or not dataguard_result.empty:
@@ -109,36 +109,37 @@ class LineageCronstructor:
 
 
 
-    def get_or_create_node(self, target_name, object_class=None):
+    def get_or_create_node(self, target_name, object_class=None, **identifier):
         """
         Check if the table name belongs to the object_type and return it if it exists.
         Create it if it does not exist.
         """
        
-        # object_class is None which means we don't sure it's View or Table.
         object = self.get_object_class(target_name, object_class)
-        object_node = object.nodes.get_or_none(name=target_name)
+        object_node = object.nodes.get_or_none(**identifier)
 
         if object_node:
             return object_node
         else:
-            return object(name=target_name).save()
+            return object(**identifier).save()
     
 
-    def connect_nodes(self, target_node, source_node):
+    def connect_nodes(self, source_node, target_node):
         """
         Connects nodes dynamically based on their types (Table, View, BIview, ERPview, etc.).
         """
         source_labels = source_node.labels()
         target_labels = target_node.labels()
 
-        if ['View','Table'] in target_labels and ['View','Table'] in source_labels:
-            target_node.child_to_table.connect(source_node)
+        if ['View','Table'] in source_labels and ['View','Table'] in target_labels:
             source_node.parent_from_view.connect(target_node)
-        elif ['LoadPlan'] in source_labels:
-            target_node.next_to.connect(source_node)
+            target_node.child_to_table.connect(source_node)
+        elif 'LoadPlan' in source_labels and 'LoadPlan' in target_labels:
             source_node.previous_from.connect(target_node)
-
+            target_node.next_to.connect(source_node)
+        elif 'LoadPlan' in source_labels and 'Scenario' in target_labels:
+            source_node.to_scenario.connect(target_node)
+            target_node.from_loadplan.connect(source_node)
         else:
             raise ValueError(f"Unknown connection type between {source_labels} and {target_labels}")
 

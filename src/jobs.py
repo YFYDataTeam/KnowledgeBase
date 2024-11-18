@@ -9,7 +9,7 @@ from src.loadplan_lineage import LoadPlanLineage
 from src.utils import OracleAgent
 from modules.sql import QueryManager
 
-from src.odi_lineage import create_odi_lineage
+from src.odi_lineage import ODILineageBuilder
 
 class JobDispatcher:
     def __init__(self, configs, sql_dir):
@@ -31,8 +31,9 @@ class JobDispatcher:
 
         elif job_type == JobType.LOADPLAN:
             
-            create_odi_lineage(self.configs, self.qm, loadplan_id='111502')
-
+            odi_lineage_builder = ODILineageBuilder(self.configs, self.qm,)
+            odi_lineage_builder.create_odi_lineage(loadplan_id='111502')
+            
         else: 
             raise ValueError({f'Unknown job type: {job_type}'})
 
