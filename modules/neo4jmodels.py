@@ -111,7 +111,6 @@ class ERPview(View):
 
 ########################################################################
 class LoadPlanRel(StructuredRel):
-
     pass
 
 class LoadPlan(StructuredNode):
@@ -119,10 +118,11 @@ class LoadPlan(StructuredNode):
     step_id = StringProperty(unique_index=True)
     next_to = Relationship('LoadPlan', 'Next')
     previous_from = Relationship('LoadPlan', 'Previous')
-    
+
+class LoadPlanRS(LoadPlan):
+    scen_name = StringProperty(unique_index=True)
     to_scenario = Relationship('Scenario', 'ToScenario', model=LoadPlanRel)
     scenario_from = Relationship('Scenario', 'ScenarioFrom', model=LoadPlanRel)
-
 
 class LoadPlanSE(LoadPlan):
     pass

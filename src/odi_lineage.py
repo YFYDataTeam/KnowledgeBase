@@ -69,7 +69,7 @@ class ODILineageBuilder(LineageCronstructor):
             if row['par_i_lp_step'] is None:
                 # Create or get root-level relationship to LoadPlan node
                 previous_step_identifier = {
-                    'name': f"LoadPlan_{source_table_uni_id}",
+                    'name': f"LP_{source_table_uni_id}",
                     'step_id': source_table_uni_id
                 }
                 previous_node = self.get_or_create_node(
@@ -80,7 +80,7 @@ class ODILineageBuilder(LineageCronstructor):
 
             elif row['lp_step_type'] == 'PA':
                 previous_step_identifier = {
-                    'name': f"LoadPlanPA_{pre_step_id}",
+                    'name': f"PA_{pre_step_id}",
                     'step_id': pre_step_id
                 }
                 previous_node = self.get_or_create_node(
@@ -93,13 +93,6 @@ class ODILineageBuilder(LineageCronstructor):
                 pass
             
             return previous_node
-
-    def create_relationship(self, pre_node, cur_node):
-        
-        
-
-        return
-
 
     def create_loadplan_lineage(self, loadplan_table: pd.DataFrame):
         """
@@ -116,7 +109,7 @@ class ODILineageBuilder(LineageCronstructor):
 
             if par_lp_step is None:
                 # Create root node
-                target_name = f"LoadPlan_{loadplan_id}"
+                target_name = f"LP_{loadplan_id}"
                 identifier = {
                     'name': target_name,
                     'step_id': loadplan_id
@@ -125,7 +118,7 @@ class ODILineageBuilder(LineageCronstructor):
 
             if lp_step_type == 'PA':
                 # Create parallel processing node
-                target_name = f"LoadPlanPA_{lp_step}"
+                target_name = f"PA_{lp_step}"
                 identifier = {
                     'name': target_name,
                     'step_id': lp_step
@@ -144,14 +137,14 @@ class ODILineageBuilder(LineageCronstructor):
 
             if lp_step_type == 'RS':
                 # Create package/scenario node
-                target_name = f"Scenario_{lp_step}"
+                target_name = f"RS_{lp_step}"
                 identifier = {
                     'name': target_name,
                     'step_id':lp_step, 
                     'scen_name': lp_step_name
                 }
 
-                cur_node = self.get_or_create_node(target_name=identifier['name'], object_class=ObjectType.Scenario.__str__(), **identifier)
+                cur_node = self.get_or_create_node(target_name=identifier['name'], object_class=ObjectType.LoadPlan.__str__() + 'RS', **identifier)
 
                 pre_node = self.create_previous_node(
                     source_table=loadplan_table,
@@ -170,6 +163,8 @@ class ODILineageBuilder(LineageCronstructor):
 
         # Create LoadPlan lineage
         self.create_loadplan_lineage(loadplan_table)
+
+        # Create
 
         # Create Scenario lineage (if applicable)
         # Add logic here if needed to process df_scenario_steps
