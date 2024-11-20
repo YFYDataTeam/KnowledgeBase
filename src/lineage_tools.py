@@ -132,28 +132,49 @@ class LineageCronstructor:
             return object(**identifier).save()
     
 
-    def connect_nodes(self, source_node, target_node):
+    def connect_nodes(self, source_node, target_node, process_rel=False):
         """
         Connects nodes dynamically based on their types (Table, View, BIview, ERPview, etc.).
         """
         source_labels = set(source_node.labels())
         target_labels = set(target_node.labels())
 
-        if {'View', 'Table'} & source_labels and {'View', 'Table'} & target_labels:
-            source_node.parent_from_view.connect(target_node)
-            target_node.child_to_table.connect(source_node)
-        elif 'LoadPlan' in source_labels and 'LoadPlan' in target_labels:
-            source_node.previous_from.connect(target_node)
-            target_node.next_to.connect(source_node)
-        elif 'LoadPlan' in source_labels and 'Scenario' in target_labels:
-            source_node.to_scenario.connect(target_node)
-            target_node.from_loadplan.connect(source_node)
-        elif 'Scenario' in source_labels and {'View', 'Table'} & target_labels:
-            source_node.contains_table.connect(target_node)
-            target_node.in_scenario.connect(source_node)
+        if process_rel is False:
+            if {'View', 'Table'} & source_labels and {'View', 'Table'} & target_labels:
+                source_type = next(iter({'View', 'Table'} & source_labels))
+                target_type = next(iter({'View', 'Table'} & target_labels))
 
+                source_to_target_rel_name = f"parent_from_{source_type.lower()}"
+                target_from_source_rel_name = f"child_to_{target_type.lower()}"
+
+                # Dynamically connect the nodes
+                getattr(source_node, source_to_target_rel_name).connect(target_node)
+                getattr(target_node, target_from_source_rel_name).connect(source_node)
+
+            elif 'LoadPlan' in source_labels and 'LoadPlan' in target_labels:
+                source_node.previous_from.connect(target_node)
+                target_node.next_to.connect(source_node)
+            elif 'LoadPlan' in source_labels and 'Scenario' in target_labels:
+                source_node.to_scenario.connect(target_node)
+                target_node.from_loadplan.connect(source_node)
+            elif 'Scenario' in source_labels and {'View', 'Table'} & target_labels:
+                source_node.contains_table.connect(target_node)
+                target_node.in_scenario.connect(source_node)
+
+            else:
+                raise ValueError(f"Unknown connection type between {source_labels} and {target_labels}")
         else:
-            raise ValueError(f"Unknown connection type between {source_labels} and {target_labels}")
+            if {'View', 'Table'} & source_labels and {'View', 'Table'} & target_labels:
+                source_type = next(iter({'View', 'Table'} & source_labels))
+                target_type = next(iter({'View', 'Table'} & target_labels))
+
+                source_to_target_rel_name = f"step_to_{source_type.lower()}"
+                target_from_source_rel_name = f"step_from_{target_type.lower()}"
+
+                # Dynamically connect the nodes
+                getattr(source_node, source_to_target_rel_name).connect(target_node)
+                getattr(target_node, target_from_source_rel_name).connect(source_node)
+
 
 
     # def creage_join_table_graphself(self, datasource_list, join_list):
@@ -235,5 +256,15 @@ class LineageCronstructor:
             
             self.result_destructure(row.view_name, row.format_fixed_lineage)
 
+    def get_or_create_scen_node(self, scen_name, scen_version):
+        scen_identifier = {
+            'name': scen_name,
+            'scen_version': scen_version
+        }
+        return self.get_or_create_node(target_name=scen_name, object_class=ObjectType.Scenario.__str__(), **scen_identifier)
+    
+    def get_or_create_table_node(self, table_name):
+        table_identifier = {'name': table_name}
+        return self.get_or_create_node(target_name=table_name, object_class=None, **table_identifier)
 
 

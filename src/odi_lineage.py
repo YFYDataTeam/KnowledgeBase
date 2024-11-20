@@ -137,7 +137,7 @@ class ODILineageBuilder(LineageCronstructor):
                 self.connect_nodes(pre_node, cur_node)
 
             if lp_step_type == 'RS':
-                # Create package/scenario node
+                # Create RS node
                 target_name = f"RS_{lp_step}"
                 identifier = {
                     'name': target_name,
@@ -171,34 +171,49 @@ class ODILineageBuilder(LineageCronstructor):
 
     def create_scenario_lineage(self, scenario_steps: pd.DataFrame):
 
-        # link LoadPlanRS node with scenario node
-        scen_list = scenario_steps.scen_name.unique().tolist()
+        # scen_list = scenario_steps.scen_name.unique().tolist()
 
+        # sort the nno for each scenario to make sure the table usage ordr is correct
+        scenario_steps = scenario_steps.sort_values(['scen_no','nno'], ascending=True)
+        scenario_steps['prev_nno'] = scenario_steps.groupby('scen_no')['nno'].shift(1).fillna(0).astype(int)
 
-        for _, row in scenario_steps.iterrows():
+        for index, row in scenario_steps.iterrows():
 
             scen_name = row['scen_name']
             scen_version = row['scen_version']
-            scen_identifier = {
-                'name': scen_name,
-                'scen_version': scen_version
-            }
+            scen_step_no = row['nno']
+            scen_prev_step_no = row['prev_nno']
 
-            # get or create scenario node
-            scen_node = self.get_or_create_node(target_name=scen_name, object_class=ObjectType.Scenario.__str__(), **scen_identifier)
+            # 0 mean the first table in scenario
+            if scen_prev_step_no == 0:
+                # get or create scenario node
+                scen_node = self.get_or_create_scen_node(scen_name, scen_version)
 
-            # get or create table node after classification
-            table_name = row['table_name']
-            table_identifier = {
-                'name': table_name
-            }
-            table_node = self.get_or_create_node(target_name=table_name, object_class=None, **table_identifier)
-            # link scenario and table
-            self.connect_nodes(scen_node, table_node)
+                # get or create table node after classification
+                table_name = row['table_name']
+                table_node = self.get_or_create_table_node(table_name)
+                # link scenario and table
+                self.connect_nodes(scen_node, table_node)
 
+            else:
+                table_name = row['table_name']
+                table_node = self.get_or_create_table_node(table_name)
 
+                prev_nno = scenario_steps['nno'].iloc[index-1]
+                # find previous table
+                prev_table_node = self._get_prev_table_node(scenario_steps, scen_name, prev_nno)
 
-        return 1
+                self.connect_nodes(prev_table_node, table_node, process_rel=True)
+    
+    def _get_prev_table_node(self, scenario_steps, scen_name, scen_prev_step_no):
+        """
+        Helper function to find the previous table node based on the scenario name and previous step number.
+        """
+        prev_table_name = scenario_steps[
+            (scenario_steps['scen_name'] == scen_name) &
+            (scenario_steps['nno'] == scen_prev_step_no)
+        ]['table_name'].iloc[0]
+        return self.get_or_create_table_node(prev_table_name)
 
     def create_odi_lineage(self, loadplan_id: int):
         """

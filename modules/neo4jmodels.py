@@ -41,6 +41,10 @@ class Table(StructuredNode):
 
     in_scenario = Relationship('Scenario', 'In')
 
+
+    # For process_rel
+    step_to_table = RelationshipTo('Table', 'ToTable', model=TableRel)
+    step_from_table = RelationshipTo('Table', 'FromTable', model=TableRel)
 class BItable(Table):
     pass
 
