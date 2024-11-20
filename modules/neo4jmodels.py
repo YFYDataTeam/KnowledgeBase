@@ -128,10 +128,13 @@ class LoadPlan(StructuredNode):
     next_to = Relationship('LoadPlan', 'Next')
     previous_from = Relationship('LoadPlan', 'Previous')
 
-class LoadPlanRS(LoadPlan):
     scen_name = StringProperty(unique_index=True)
     to_scenario = Relationship('Scenario', 'ToScenario', model=LoadPlanRel)
     scenario_from = Relationship('Scenario', 'ScenarioFrom', model=LoadPlanRel)
+
+
+class LoadPlanRS(LoadPlan):
+    pass
 
 class LoadPlanSE(LoadPlan):
     pass

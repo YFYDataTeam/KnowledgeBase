@@ -53,7 +53,7 @@ class ODILineageBuilder(LineageCronstructor):
 
         return loadplan_table, df_scenario_steps
 
-    def create_previous_node(
+    def _get_previous_loadplan_node(
         self, 
         source_table: pd.DataFrame, 
         source_table_uni_col: str, 
@@ -73,27 +73,34 @@ class ODILineageBuilder(LineageCronstructor):
                     'name': f"LP_{source_table_uni_id}",
                     'loadplan_id': source_table_uni_id
                 }
-                previous_node = self.get_or_create_node(
-                    target_name=previous_step_identifier['name'], 
-                    object_class=ObjectType.LoadPlan.__str__(), 
-                    **previous_step_identifier
-                )
+                object_class=ObjectType.LoadPlan.__str__()
 
             elif row['lp_step_type'] == 'PA':
                 previous_step_identifier = {
                     'name': f"PA_{pre_step_id}",
                     'step_id': pre_step_id
                 }
-                previous_node = self.get_or_create_node(
-                    target_name=previous_step_identifier['name'], 
-                    object_class=ObjectType.LoadPlan.__str__(), 
-                    **previous_step_identifier
-                )
+                object_class=ObjectType.LoadPlan.__str__() + 'PA'
 
             elif row['lp_step_type'] == 'RS':
                 pass
             
-            return previous_node
+            return self.get_or_create_node(
+                    target_name=previous_step_identifier['name'], 
+                    object_class=object_class, 
+                    **previous_step_identifier
+                )
+        
+    def _get_prev_table_node(self, scenario_steps, scen_name, scen_prev_step_no):
+        """
+        Helper function to find the previous table node based on the scenario name and previous step number.
+        """
+        prev_table_name = scenario_steps[
+            (scenario_steps['scen_name'] == scen_name) &
+            (scenario_steps['nno'] == scen_prev_step_no)
+        ]['table_name'].iloc[0]
+        
+        return self.get_or_create_table_node(prev_table_name)
 
     def create_loadplan_lineage(self, loadplan_table: pd.DataFrame):
         """
@@ -117,16 +124,21 @@ class ODILineageBuilder(LineageCronstructor):
                 }
                 self.get_or_create_node(target_name=identifier['name'], object_class=ObjectType.LoadPlan.__str__(), **identifier)
 
-            if lp_step_type == 'PA':
-                # Create parallel processing node
-                target_name = f"PA_{lp_step}"
-                identifier = {
-                    'name': target_name,
-                    'step_id': lp_step
-                }
-                cur_node = self.get_or_create_node(target_name=identifier['name'], object_class=ObjectType.LoadPlan.__str__() + 'PA', **identifier)
+            target_name = f"{lp_step_type}_{lp_step}"
+            identifier = {
+                'name': target_name,
+                'step_id': lp_step,
+                'scen_name': lp_step_name if lp_step_type == 'RS' else None
+            }
+            cur_node = self.get_or_create_node(
+                target_name=identifier['name'], 
+                object_class=ObjectType.LoadPlan.__str__() + lp_step_type if lp_step_type in {'PA', 'RS'} else ObjectType.LoadPlan.__str__(),
+                **{k: v for k, v in identifier.items() if v is not None}
+            )
 
-                pre_node = self.create_previous_node(
+            pre_node = None
+            if par_lp_step:
+                pre_node = self._get_previous_loadplan_node(
                     source_table=loadplan_table,
                     source_table_uni_col='i_load_plan',
                     source_table_uni_id=loadplan_id,
@@ -134,27 +146,11 @@ class ODILineageBuilder(LineageCronstructor):
                     pre_step_id=par_lp_step
                 )
 
+            # connect loadplan nodes
+            if pre_node:
                 self.connect_nodes(pre_node, cur_node)
 
             if lp_step_type == 'RS':
-                # Create RS node
-                target_name = f"RS_{lp_step}"
-                identifier = {
-                    'name': target_name,
-                    'step_id':lp_step, 
-                    'scen_name': lp_step_name
-                }
-
-                cur_rs_node = self.get_or_create_node(target_name=identifier['name'], object_class=ObjectType.LoadPlan.__str__() + 'RS', **identifier)
-
-                pre_node = self.create_previous_node(
-                    source_table=loadplan_table,
-                    source_table_uni_col='i_load_plan',
-                    source_table_uni_id=loadplan_id,
-                    search_col='i_lp_step',
-                    pre_step_id=par_lp_step
-                )
-                self.connect_nodes(pre_node, cur_rs_node)
 
                 # get or create scenario node
                 scen_name = row['scen_name']
@@ -163,11 +159,10 @@ class ODILineageBuilder(LineageCronstructor):
                     'name': scen_name,
                     'scen_version': scen_version
                 }
-
                 scen_node = self.get_or_create_node(target_name=scen_name, object_class=ObjectType.Scenario.__str__(), **scen_identifier)
 
                 # link loadplan with scenario node
-                self.connect_nodes(cur_rs_node, scen_node)
+                self.connect_nodes(cur_node, scen_node)
 
     def create_scenario_lineage(self, scenario_steps: pd.DataFrame):
 
@@ -204,16 +199,7 @@ class ODILineageBuilder(LineageCronstructor):
                 prev_table_node = self._get_prev_table_node(scenario_steps, scen_name, prev_nno)
 
                 self.connect_nodes(prev_table_node, table_node, process_rel=True)
-    
-    def _get_prev_table_node(self, scenario_steps, scen_name, scen_prev_step_no):
-        """
-        Helper function to find the previous table node based on the scenario name and previous step number.
-        """
-        prev_table_name = scenario_steps[
-            (scenario_steps['scen_name'] == scen_name) &
-            (scenario_steps['nno'] == scen_prev_step_no)
-        ]['table_name'].iloc[0]
-        return self.get_or_create_table_node(prev_table_name)
+
 
     def create_odi_lineage(self, loadplan_id: int):
         """
@@ -227,7 +213,4 @@ class ODILineageBuilder(LineageCronstructor):
         # Create Scenario lineage
         self.create_scenario_lineage(scenario_steps)
 
-        # Create Scenario lineage (if applicable)
-        # Add logic here if needed to process df_scenario_steps
-
-        print("Lineage creation completed.")
+        print("Odi lineage creation completed.")
