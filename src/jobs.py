@@ -5,7 +5,6 @@ from src.sql_deconstruction import SQLDeconstructor
 from tests.test_cases import BIDB_TEST_CASES
 from src.lineage_tools import LineageCronstructor
 from src.view_lineage import ViewLineageCreator
-from src.loadplan_lineage import LoadPlanLineage
 from src.utils import OracleAgent
 from modules.sql import QueryManager
 

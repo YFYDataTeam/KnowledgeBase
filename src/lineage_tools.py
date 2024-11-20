@@ -1,7 +1,7 @@
 import json
 import pandas as pd
 import importlib
-from src.utils import OracleAgent
+from src.utils import OracleAgent, classify_table_type_and_location
 from modules.neo4jmodels import (
     config, 
     db, 
@@ -48,13 +48,18 @@ class LineageCronstructor:
             return None
 
 
-    def check_nodes_and_relationships(self, table_type):
+    def check_nodes_and_relationships(self, node_type, node_name, linked_node_name=None):
         query = f"""
-        MATCH (a:{table_type})-[r]-(b)
+        MATCH (a:{node_type})-[r]-(b)
+        where a.name = $node_name
+        {"AND b.name = $linked_node_name if linked_node_name else"}
         RETURN a, r, b
         """
+        params = {"node_name": node_name}
+        if linked_node_name:
+            params["linked_node_name"] = linked_node_name
         
-        cypher_results, meta = self.db.cypher_query(query)
+        cypher_results, meta = self.db.cypher_query(query, params)
         if cypher_results:
             # Return results as a list of dictionaries containing nodes and relationships
             results_as_dict = [dict(zip(meta, row)) for row in cypher_results]
@@ -74,7 +79,7 @@ class LineageCronstructor:
             raise ImportError(f"Error importing {class_name}: {e}")
         
         
-    def get_object_class(self, target_name, object_class=None):
+    def get_object_class(self, target_name, table_type=None):
         """
         Return the class defined in ObjectType enum.
 
@@ -82,30 +87,33 @@ class LineageCronstructor:
         Otherwise the object type belongs to LoadPlan, Scenario or Interface.
         """
 
-        if object_class == None:
-            db_type = DBPrefix.get_db_type(target_name).name
-            # if the table_name can be found in all_views then it's view, otherwise, table.
-            bi_sql_agent = OracleAgent(self.configs['BIDB_conn_info'])
-            biview_check_query = Queries.VIEWS_EQ.get_query(target_name)
-            bi_result = bi_sql_agent.read_table(biview_check_query)
+        if table_type == None:
+            #TODO: refactor as a table/view classification function
+            # db_type = DBPrefix.get_db_type(target_name).name
+            # # if the table_name can be found in all_views then it's view, otherwise, table.
+            # bi_sql_agent = OracleAgent(self.configs['BIDB_conn_info'])
+            # biview_check_query = Queries.VIEWS_EQ.get_query(target_name)
+            # bi_result = bi_sql_agent.read_table(biview_check_query)
 
-            # dataguard is the DB to store the data from ERP
-            dataguard_sql_agent = OracleAgent(self.configs['Data_guard'])
-            dataguard_check_query = Queries.VIEWS_EQ.get_query(target_name)
-            dataguard_result = dataguard_sql_agent.read_table(dataguard_check_query)
+            # # dataguard is the DB to store the data from ERP
+            # dataguard_sql_agent = OracleAgent(self.configs['Data_guard'])
+            # dataguard_check_query = Queries.VIEWS_EQ.get_query(target_name)
+            # dataguard_result = dataguard_sql_agent.read_table(dataguard_check_query)
 
-            if not bi_result.empty or not dataguard_result.empty:
-                object_class = 'View'
-            else:
-                object_class = 'Table'
+            # if not bi_result.empty or not dataguard_result.empty:
+            #     table_type = 'View'
+            # else:
+            #     table_type = 'Table'
 
-            db_table_type = db_type.upper() + object_class.lower()
+            db_type, table_type = classify_table_type_and_location(self.configs, target_name)
+
+            db_table_type = db_type.upper() + table_type.lower()
             table_class = self.get_model_class(db_table_type)
             # table_class = globals().get(db_table_type)
             return table_class
         
         else:
-            return self.get_model_class(object_class)
+            return self.get_model_class(table_type)
 
 
 
@@ -128,10 +136,10 @@ class LineageCronstructor:
         """
         Connects nodes dynamically based on their types (Table, View, BIview, ERPview, etc.).
         """
-        source_labels = source_node.labels()
-        target_labels = target_node.labels()
+        source_labels = set(source_node.labels())
+        target_labels = set(target_node.labels())
 
-        if ['View','Table'] in source_labels and ['View','Table'] in target_labels:
+        if {'View', 'Table'} & source_labels and {'View', 'Table'} & target_labels:
             source_node.parent_from_view.connect(target_node)
             target_node.child_to_table.connect(source_node)
         elif 'LoadPlan' in source_labels and 'LoadPlan' in target_labels:
@@ -140,6 +148,10 @@ class LineageCronstructor:
         elif 'LoadPlan' in source_labels and 'Scenario' in target_labels:
             source_node.to_scenario.connect(target_node)
             target_node.from_loadplan.connect(source_node)
+        elif 'Scenario' in source_labels and {'View', 'Table'} & target_labels:
+            source_node.contains_table.connect(target_node)
+            target_node.in_scenario.connect(source_node)
+
         else:
             raise ValueError(f"Unknown connection type between {source_labels} and {target_labels}")
 

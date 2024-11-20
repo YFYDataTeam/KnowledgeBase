@@ -39,6 +39,8 @@ class Table(StructuredNode):
     parent_from_table = RelationshipTo('Table', 'Parent', model=TableRel)
     parent_from_view = RelationshipTo('View', 'Parent', model=TableRel)
 
+    in_scenario = Relationship('Scenario', 'In')
+
 class BItable(Table):
     pass
 
@@ -99,7 +101,9 @@ class View(StructuredNode):
     # is_parent_from = RelationshipTo(Table, 'IsParentOf', model=TableRel)
     from_aggregated_table = RelationshipFrom(AggregatTable, 'FromGroupby', model=TableRel)
     from_joined_table = RelationshipFrom(JoinTable, 'FromJoin', model=TableRel)
-    from_union_table = RelationshipFrom(UnionTable, 'FROM_UNION', model=TableRel)
+    from_union_table = RelationshipFrom(UnionTable, 'FromUnion', model=TableRel)
+
+    in_scenario = Relationship('Scenario', 'In')
 
 class BIview(View):
     pass
@@ -115,6 +119,7 @@ class LoadPlanRel(StructuredRel):
 
 class LoadPlan(StructuredNode):
     name= StringProperty(uniqued_index=True)
+    loadplan_id = StringProperty(uniqued_index=True)
     step_id = StringProperty(unique_index=True)
     next_to = Relationship('LoadPlan', 'Next')
     previous_from = Relationship('LoadPlan', 'Previous')
@@ -141,11 +146,13 @@ class LoadPlanPA(LoadPlan):
 
 class Scenario(StructuredNode):
     name = StringProperty(uniqued_index=True)
-    step_id = StringProperty(unique_index=True)
-    scen_name = StringProperty(unique_index=True)
+    step_id = StringProperty()
+    scen_version = StringProperty()
 
-    next_interface = Relationship('Interface', 'NextToInterface', model=LoadPlanRel)
-    from_loadplan = Relationship('LoadPlan', 'ComesFromLoadPlan', model=LoadPlanRel)
+    to_interface = Relationship('Interface', 'ToInterface', model=LoadPlanRel)
+    from_loadplan = Relationship('LoadPlan', 'FromLoadPlan', model=LoadPlanRel)
 
+    contains_table = Relationship('Table', 'Contains')
+    contains_view = Relationship('View', 'Contains')
 class Interface(StructuredNode):
     name = StringProperty(uniqued_index=True)
