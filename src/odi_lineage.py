@@ -99,7 +99,7 @@ class ODILineageBuilder(LineageCronstructor):
             (scenario_steps['scen_name'] == scen_name) &
             (scenario_steps['nno'] == scen_prev_step_no)
         ]['table_name'].iloc[0]
-        
+
         return self.get_or_create_table_node(prev_table_name)
 
     def create_loadplan_lineage(self, loadplan_table: pd.DataFrame):
