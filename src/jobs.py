@@ -117,5 +117,5 @@ def create_erp_views_lineage(configs, llm_type):
         
         lineage_agent.result_destructure(row.view_name, row.format_fixed_lineage)
 
-    print('end')
+
 
