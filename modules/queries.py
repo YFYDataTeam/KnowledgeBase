@@ -33,7 +33,7 @@ class Queries(Enum):
 
     ERP_TO_BI_TEST_CASE = """
     SELECT view_name, text
-    FROM all_v  iews
+    FROM all_views
     WHERE view_name IN ('MTL_ITEM_CATEGORIES_V', 'MTL_ONHAND_QUANTITIES', 'XXTPO_BI_INFO_V', 'XXTPO_BI_RCV_INFO_V')
     """
 

@@ -21,13 +21,13 @@ class ViewLineageCreator(LineageCronstructor):
         
     def create_view_data_source(self, view_name, datasource_list):
         # create view node
-        view_node = self.get_or_create_node(view_name, table_type=None)
+        view_node = self.get_or_create_node(view_name)
         # view_node.syntax = syntax
         view_node.save()
 
         # create table node
         for table_name in datasource_list:
-            table_node = self.get_or_create_node(table_name, table_type=None)  
+            table_node = self.get_or_create_node(table_name)  
             
             self.connect_nodes(view_node, table_node)      
 
