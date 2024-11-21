@@ -1,10 +1,11 @@
 import pandas as pd
+import os
 import logging
 import argparse
 from src.utils import read_config
-from src.commontypes import JobType, LlmType
+from src.type_enums import JobType, LlmType
 from src.sql_deconstruction import SQLDeconstructor
-from models.queries import Queries
+from modules.queries import Queries
 from src.jobs import JobDispatcher
 
 
@@ -21,11 +22,12 @@ def get_argument():
 
 def main():
     # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
+    parent_path =  os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    sql_dir = os.path.join(os.path.dirname(__file__), 'sql_files')
     configs = read_config(".env/info.json")
     args = get_argument()
 
-    dispatcher = JobDispatcher(configs)
+    dispatcher = JobDispatcher(configs, sql_dir)
     dispatcher.run_job(JobType[args.JobType])
 
 

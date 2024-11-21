@@ -1,25 +1,38 @@
-from models.queries import Queries
-from src.commontypes import JobType, LineageType, DBType, LlmType
+import os
+from modules.queries import Queries
+from src.type_enums import JobType, LineageType, DBType, LlmType
 from src.sql_deconstruction import SQLDeconstructor
 from tests.test_cases import BIDB_TEST_CASES
 from src.lineage_tools import LineageCronstructor
+from src.view_lineage import ViewLineageCreator
 from src.utils import OracleAgent
+from modules.sql import QueryManager
 
+from src.odi_lineage import ODILineageBuilder
 
 class JobDispatcher:
-    def __init__(self, configs):
+    def __init__(self, configs, sql_dir):
         self.configs = configs
-    
+        self.qm = QueryManager(sql_dir)
+
     def run_job(self, job_type):
+
         if job_type == JobType.BIVIEWS:
+
             create_bidb_views_lineage(self.configs, llm_type=LlmType.AOAI)
+
         elif job_type == JobType.ERPTOBI:
 
             create_erp_to_bidb_data_lineage(self.configs)
 
             create_erp_views_lineage(self.configs, llm_type=LlmType.AOAI)
 
-            print('done')
+
+        elif job_type == JobType.LOADPLAN:
+            
+            odi_lineage_builder = ODILineageBuilder(self.configs, self.qm,)
+            odi_lineage_builder.create_odi_lineage(loadplan_id='111502')
+            
         else: 
             raise ValueError({f'Unknown job type: {job_type}'})
 
@@ -42,9 +55,13 @@ def create_bidb_views_lineage(configs, llm_type):
 
     desconstructed_sql = sql_deconstructor.run(input_data, relationship_type)
 
-    lineage_agent = LineageCronstructor(configs)
+    lineage_agent = ViewLineageCreator(configs)
 
-    lineage_agent.run(desconstructed_sql)
+    for _, row in desconstructed_sql.iterrows():
+        
+        lineage_agent.result_destructure(row.view_name, row.format_fixed_lineage)
+
+    # lineage_agent.run(desconstructed_sql)
 
     # for testing, delete all nodes at first
     # lineage_agent.clean_all_nodes()
@@ -52,7 +69,7 @@ def create_bidb_views_lineage(configs, llm_type):
 
 def create_erp_to_bidb_data_lineage(configs):
     """
-    Since the relationship is orgainzed in a table, LLM is not needed.
+    Since the relationship is orgainzed in a table, LLM deconstruction is not needed.
     """
     dbconfig = configs['BIDB_conn_info']
     query = Queries.ODI_TEST_CASE.value
@@ -66,9 +83,15 @@ def create_erp_to_bidb_data_lineage(configs):
     # lineage_agent.clean_all_nodes()
 
     for _, row in erp_to_bidb_relationship_data.iterrows():
+        target_identifier = {
+            'name': row['target_table']
+        }
+        target_node = lineage_agent.get_or_create_node(target_name=row.target_table, **target_identifier)
 
-        target_node = lineage_agent.get_node(row.target_table, table_type=None)
-        source_node = lineage_agent.get_node(row.source_table, table_type=None)
+        source_identifier = {
+            'name': row['source_table']
+        }
+        source_node = lineage_agent.get_or_create_node(target_name=row.source_table, **source_identifier)
 
         lineage_agent.connect_nodes(target_node, source_node)        
 
@@ -88,8 +111,11 @@ def create_erp_views_lineage(configs, llm_type):
 
     desconstructed_sql = sql_deconstructor.run(erp_views, relationship_type)
 
-    lineage_agent = LineageCronstructor(configs)
+    lineage_agent = ViewLineageCreator(configs)
+    
+    for _, row in desconstructed_sql.iterrows():
+        
+        lineage_agent.result_destructure(row.view_name, row.format_fixed_lineage)
 
-    #TODO: refactor the run function that move out the for-loop
-    lineage_agent.run(desconstructed_sql)
+
 

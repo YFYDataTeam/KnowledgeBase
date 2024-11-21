@@ -39,6 +39,12 @@ class Table(StructuredNode):
     parent_from_table = RelationshipTo('Table', 'Parent', model=TableRel)
     parent_from_view = RelationshipTo('View', 'Parent', model=TableRel)
 
+    in_scenario = Relationship('Scenario', 'In')
+
+
+    # For process_rel
+    step_to_table = RelationshipTo('Table', 'ToTable', model=TableRel)
+    step_from_table = RelationshipTo('Table', 'FromTable', model=TableRel)
 class BItable(Table):
     pass
 
@@ -99,10 +105,61 @@ class View(StructuredNode):
     # is_parent_from = RelationshipTo(Table, 'IsParentOf', model=TableRel)
     from_aggregated_table = RelationshipFrom(AggregatTable, 'FromGroupby', model=TableRel)
     from_joined_table = RelationshipFrom(JoinTable, 'FromJoin', model=TableRel)
-    from_union_table = RelationshipFrom(UnionTable, 'FROM_UNION', model=TableRel)
+    from_union_table = RelationshipFrom(UnionTable, 'FromUnion', model=TableRel)
+
+    in_scenario = Relationship('Scenario', 'In')
 
 class BIview(View):
     pass
 
 class ERPview(View):
     pass
+
+
+
+########################################################################
+class LoadPlanRel(StructuredRel):
+    pass
+
+class LoadPlan(StructuredNode):
+    name= StringProperty(uniqued_index=True)
+    loadplan_id = StringProperty(uniqued_index=True)
+    step_id = StringProperty(unique_index=True)
+    next_to = Relationship('LoadPlan', 'Next')
+    previous_from = Relationship('LoadPlan', 'Previous')
+
+    scen_name = StringProperty(unique_index=True)
+    to_scenario = Relationship('Scenario', 'ToScenario', model=LoadPlanRel)
+    scenario_from = Relationship('Scenario', 'ScenarioFrom', model=LoadPlanRel)
+
+
+class LoadPlanRS(LoadPlan):
+    pass
+
+class LoadPlanSE(LoadPlan):
+    pass
+
+class LoadPlanPA(LoadPlan):
+    pass
+
+########################################################################
+
+# class Package(StructuredNode):
+#     name = StringProperty(uniqued_index=True)
+#     pkg_id = StringProperty(unique_index=True)
+
+#     next_interface = Relationship('Interface', 'NextToInterface', model=LoadPlanRel)
+#     loadplan_source = Relationship('LoadPlan', 'ComesFromLoadPlan', model=LoadPlanRel)
+
+class Scenario(StructuredNode):
+    name = StringProperty(uniqued_index=True)
+    step_id = StringProperty()
+    scen_version = StringProperty()
+
+    to_interface = Relationship('Interface', 'ToInterface', model=LoadPlanRel)
+    from_loadplan = Relationship('LoadPlan', 'FromLoadPlan', model=LoadPlanRel)
+
+    contains_table = Relationship('Table', 'Contains')
+    contains_view = Relationship('View', 'Contains')
+class Interface(StructuredNode):
+    name = StringProperty(uniqued_index=True)

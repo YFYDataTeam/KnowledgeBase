@@ -25,7 +25,7 @@ class Queries(Enum):
     SELECT view_name, text FROM ALL_Views
     WHERE owner = 'ODS' AND rownum <= 5
     """
-    
+
     ODI_TEST_CASE = """
     SELECT * FROM W_ODI_SCEN_TABLES_D
     WHERE scen_name='PKG_W_IRISO_BASE_PAPER_INV'
@@ -33,6 +33,21 @@ class Queries(Enum):
 
     ERP_TO_BI_TEST_CASE = """
     SELECT view_name, text
-    FROM all_v  iews
+    FROM all_views
     WHERE view_name IN ('MTL_ITEM_CATEGORIES_V', 'MTL_ONHAND_QUANTITIES', 'XXTPO_BI_INFO_V', 'XXTPO_BI_RCV_INFO_V')
+    """
+
+    GET_LOADPLAN_STEP_TEST = """
+    select *
+    from snp_lp_step
+    where i_load_plan = {loadplan_id}
+        --i_load_plan=45502 --and par_i_lp_step=676502
+    order by i_lp_step, nvl(par_i_lp_step,0), step_order
+    """
+
+    GET_SCENARIO_TEST = """
+    --以scen_no查詢scenario中steps
+    select *
+    from snp_scen_step
+    where scen_no=550502 and table_name IS NOT Null
     """

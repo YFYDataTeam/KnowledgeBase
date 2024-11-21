@@ -4,6 +4,7 @@ class JobType(Enum):
     BIVIEWS = 'BIVIEWS'
     ERPTOBI = 'ERPTOBI'
     ERPVIEWS = 'ERPVIEWS'
+    LOADPLAN = 'LOADPLAN'
 
 class DBType(Enum):
     DW = 'DW'
@@ -18,10 +19,17 @@ class LlmType(Enum):
     AOAI='AOAI'
 
 
-class TableType(Enum):
+class ObjectType(Enum):
 
     Table = 'Table'
     View = 'View'
+    LoadPlan = 'LoadPlan'
+    Package = 'Package'
+    Scenario = 'Scenario'
+    Interface = 'Interface'
+    
+    def __str__(self):
+        return self.value
 
 class DBPrefix(Enum):
 

@@ -8,10 +8,10 @@ from langchain.prompts.chat import (
     HumanMessagePromptTemplate
 )
 
-from src.commontypes import DBType, LineageType, LlmType
- 
+from src.type_enums import DBType, LineageType, LlmType
+from langchain_openai import AzureChatOpenAI
 
-import models.prompts as prompts
+import modules.prompts as prompts
 
 
 class SQLDeconstructor:

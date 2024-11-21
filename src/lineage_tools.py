@@ -1,9 +1,22 @@
 import json
 import pandas as pd
-from src.utils import OracleAgent
-from models.neo4jmodels import config, db, BItable, ERPtable, BIview, ERPview
-from src.commontypes import DBType, TableType, DBPrefix
-from models.queries import Queries
+import importlib
+from src.utils import OracleAgent, classify_table_type_and_location
+from modules.neo4jmodels import (
+    config, 
+    db, 
+    # BItable, 
+    # ERPtable, 
+    # BIview, 
+    # ERPview, 
+    # LoadPlan, 
+    # LoadPlanSE, 
+    # LoadPlanPA,
+    # Package,
+    # Scenario
+)
+from src.type_enums import DBType, ObjectType, DBPrefix
+from modules.queries import Queries
 
 
 class LineageCronstructor:
@@ -35,13 +48,18 @@ class LineageCronstructor:
             return None
 
 
-    def check_nodes_and_relationships(self, table_type):
+    def check_nodes_and_relationships(self, node_type, node_name, linked_node_name=None):
         query = f"""
-        MATCH (a:{table_type})-[r]-(b)
+        MATCH (a:{node_type})-[r]-(b)
+        where a.name = $node_name
+        {"AND b.name = $linked_node_name if linked_node_name else"}
         RETURN a, r, b
         """
+        params = {"node_name": node_name}
+        if linked_node_name:
+            params["linked_node_name"] = linked_node_name
         
-        cypher_results, meta = self.db.cypher_query(query)
+        cypher_results, meta = self.db.cypher_query(query, params)
         if cypher_results:
             # Return results as a list of dictionaries containing nodes and relationships
             results_as_dict = [dict(zip(meta, row)) for row in cypher_results]
@@ -50,98 +68,98 @@ class LineageCronstructor:
             return None
 
 
-    # def table_tye_check(self, db_type, table_name, table_type=None):
-    #     if table_type:
-    #         if self.db_type == DBType.BI:
-    #             sql_agent = OracleAgent(self.configs['BIDB_conn_info'])
-    #             query = Queries.BIDB_VIEWS_EQ.get_query(table_name)
-    #             result = sql_agent.read_table(query)
-    #             if result.empty:
-    #                 return BItable
-    #             else:
-    #                 return BIview
-                
-    #         elif self.db_type == DBType.ERP:
-    #             print(123)
-    #         elif self.db_type == DBType.DW:
-    #             print(12312)
-
-    #         pass
-        
-    def get_table_class(self, table_name, table_type=None):
-        db_type = DBPrefix.get_db_type(table_name).name
-        if table_type == None:
-            # if the table_name can be found in all_views then it's view, otherwise, table.
-            bi_sql_agent = OracleAgent(self.configs['BIDB_conn_info'])
-            biview_check_query = Queries.VIEWS_EQ.get_query(table_name)
-            bi_result = bi_sql_agent.read_table(biview_check_query)
-
-            # dataguard is the DB to store the data from ERP
-            dataguard_sql_agent = OracleAgent(self.configs['Data_guard'])
-            dataguard_check_query = Queries.VIEWS_EQ.get_query(table_name)
-            dataguard_result = dataguard_sql_agent.read_table(dataguard_check_query)
-
-            if not bi_result.empty or not dataguard_result.empty:
-                table_type = 'View'
-            else:
-                table_type = 'Table'
-
-        db_table_type = db_type.upper() + table_type.lower()
-        table_class = globals().get(db_table_type)
-        return table_class
-
-
-
-    def get_node(self, table_name, db_type=None, table_type=None):
+    def get_model_class(self, class_name):
         """
-        Check if the table name belongs to the table_type and return it if it exists.
+        Dynamically imports and returns the class from models.neo4jmodels.
+        """
+        try:
+            module = importlib.import_module("modules.neo4jmodels")
+            return getattr(module, class_name, None)
+        except ImportError as e:
+            raise ImportError(f"Error importing {class_name}: {e}")
+        
+        
+    def get_object_class(self, target_name, table_type=None):
+        """
+        Return the class defined in ObjectType enum.
+
+        If object type is unknow which means it could be Table or View.
+        Otherwise the object type belongs to LoadPlan, Scenario or Interface.
+        """
+
+        if table_type == None:
+            db_type, table_type = classify_table_type_and_location(self.configs, target_name)
+
+            db_table_type = db_type.upper() + table_type.lower()
+            table_class = self.get_model_class(db_table_type)
+            # table_class = globals().get(db_table_type)
+            return table_class
+        
+        else:
+            return self.get_model_class(table_type)
+
+
+
+    def get_or_create_node(self, target_name, object_class=None, **identifier):
+        """
+        Check if the table name belongs to the object_type and return it if it exists.
         Create it if it does not exist.
         """
-        # Use getattr to dynamically access the class
-        # valid_type = TableType.get_table_type(table_name).name
-        # if not valid_type or valid_type != table_type:
-        #     raise ValueError(f"Invalid or mismatched table type: {table_type} for table {table_name}")
+        if not identifier:
+            identifier = {'name': target_name}
+            
+        object = self.get_object_class(target_name, object_class)
+        object_node = object.nodes.get_or_none(**identifier)
 
-        table_class = self.get_table_class(table_name, table_type)
+        if object_node:
+            return object_node
+        else:
+            return object(**identifier).save()
+    
 
-        # table_class = globals().get(table_type)
-        
-        if table_class: 
-            table = table_class.nodes.get_or_none(name=table_name)
-            if table:
-                return table
-            else:
-                return table_class(name=table_name, filter=[], join_condition=[]).save()
-
-    def connect_nodes(self, target_node, source_node):
+    def connect_nodes(self, source_node, target_node, process_rel=False):
         """
         Connects nodes dynamically based on their types (Table, View, BIview, ERPview, etc.).
         """
-        source_labels = source_node.labels()
-        target_labels = target_node.labels()
+        source_labels = set(source_node.labels())
+        target_labels = set(target_node.labels())
 
-        if 'View' in target_labels and 'Table' in source_labels:
-            # Connect Table to View
-            target_node.child_to_table.connect(source_node)
-            source_node.parent_from_view.connect(target_node)
+        if process_rel is False:
+            if {'View', 'Table'} & source_labels and {'View', 'Table'} & target_labels:
+                source_type = next(iter({'View', 'Table'} & source_labels))
+                target_type = next(iter({'View', 'Table'} & target_labels))
 
-        elif 'Table' in target_labels and 'View' in source_labels:
-            # Connect View to Table
-            target_node.child_to_view.connect(source_node)
-            source_node.parent_from_table.connect(target_node)
+                source_to_target_rel_name = f"parent_from_{target_type.lower()}"
+                target_from_source_rel_name = f"child_to_{source_type.lower()}"
 
-        elif 'View' in target_labels and 'View' in source_labels:
-            # Connect View to View
-            target_node.child_to_view.connect(source_node)
-            source_node.parent_from_view.connect(target_node)
+                # Dynamically connect the nodes
+                getattr(source_node, source_to_target_rel_name).connect(target_node)
+                getattr(target_node, target_from_source_rel_name).connect(source_node)
 
-        elif 'Table' in target_labels and 'Table' in source_labels:
-            # Connect Table to Table (though it seems you aren't currently using this)
-            target_node.child_to_table.connect(source_node)
-            source_node.parent_from_table.connect(target_node)
+            elif 'LoadPlan' in source_labels and 'LoadPlan' in target_labels:
+                source_node.previous_from.connect(target_node)
+                target_node.next_to.connect(source_node)
+            elif 'LoadPlan' in source_labels and 'Scenario' in target_labels:
+                source_node.to_scenario.connect(target_node)
+                target_node.from_loadplan.connect(source_node)
+            elif 'Scenario' in source_labels and {'View', 'Table'} & target_labels:
+                source_node.contains_table.connect(target_node)
+                target_node.in_scenario.connect(source_node)
 
+            else:
+                raise ValueError(f"Unknown connection type between {source_labels} and {target_labels}")
         else:
-            raise ValueError(f"Unknown connection type between {source_labels} and {target_labels}")
+            if {'View', 'Table'} & source_labels and {'View', 'Table'} & target_labels:
+                source_type = next(iter({'View', 'Table'} & source_labels))
+                target_type = next(iter({'View', 'Table'} & target_labels))
+
+                source_to_target_rel_name = f"step_to_{source_type.lower()}"
+                target_from_source_rel_name = f"step_from_{target_type.lower()}"
+
+                # Dynamically connect the nodes
+                getattr(source_node, source_to_target_rel_name).connect(target_node)
+                getattr(target_node, target_from_source_rel_name).connect(source_node)
+
 
 
     # def creage_join_table_graphself(self, datasource_list, join_list):
@@ -151,7 +169,7 @@ class LineageCronstructor:
     #         join_result_name = str(parent_list[0]) + " Join " + str(parent_list[1])
 
     #         # get the filter which comes from the same parent table
-    #         join_result_node = self.get_node(join_result_name, 'JoinTable')
+    #         join_result_node = self.get_or_create_node(join_result_name, 'JoinTable')
 
         
     #         # check if the join relationship is existed
@@ -162,9 +180,9 @@ class LineageCronstructor:
 
     #         # create source table nodes
     #         joined_source_1_name = parent_list[0]
-    #         joined_source_1_node = self.get_node(joined_source_1_name, 'SourceTable')
+    #         joined_source_1_node = self.get_or_create_node(joined_source_1_name, 'SourceTable')
     #         joined_source_2_name = parent_list[1]
-    #         joined_source_2_node = self.get_node(joined_source_2_name, 'SourceTable')
+    #         joined_source_2_node = self.get_or_create_node(joined_source_2_name, 'SourceTable')
 
     #         # store the join condition in relationship
     #         join_source = [
@@ -179,13 +197,13 @@ class LineageCronstructor:
 
     def create_view_data_source(self, view_name, datasource_list):
         # create view node
-        view_node = self.get_node(view_name, table_type=None)
+        view_node = self.get_or_create_node(view_name, table_type=None)
         # view_node.syntax = syntax
         view_node.save()
 
         # create table node
         for table_name in datasource_list:
-            table_node = self.get_node(table_name, table_type=None)  
+            table_node = self.get_or_create_node(table_name, table_type=None)  
             
             self.connect_nodes(view_node, table_node)      
 
@@ -223,5 +241,15 @@ class LineageCronstructor:
             
             self.result_destructure(row.view_name, row.format_fixed_lineage)
 
+    def get_or_create_scen_node(self, scen_name, scen_version):
+        scen_identifier = {
+            'name': scen_name,
+            'scen_version': scen_version
+        }
+        return self.get_or_create_node(target_name=scen_name, object_class=ObjectType.Scenario.__str__(), **scen_identifier)
+    
+    def get_or_create_table_node(self, table_name):
+        table_identifier = {'name': table_name}
+        return self.get_or_create_node(target_name=table_name, object_class=None, **table_identifier)
 
 
