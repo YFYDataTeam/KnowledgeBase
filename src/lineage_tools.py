@@ -88,23 +88,6 @@ class LineageCronstructor:
         """
 
         if table_type == None:
-            #TODO: refactor as a table/view classification function
-            # db_type = DBPrefix.get_db_type(target_name).name
-            # # if the table_name can be found in all_views then it's view, otherwise, table.
-            # bi_sql_agent = OracleAgent(self.configs['BIDB_conn_info'])
-            # biview_check_query = Queries.VIEWS_EQ.get_query(target_name)
-            # bi_result = bi_sql_agent.read_table(biview_check_query)
-
-            # # dataguard is the DB to store the data from ERP
-            # dataguard_sql_agent = OracleAgent(self.configs['Data_guard'])
-            # dataguard_check_query = Queries.VIEWS_EQ.get_query(target_name)
-            # dataguard_result = dataguard_sql_agent.read_table(dataguard_check_query)
-
-            # if not bi_result.empty or not dataguard_result.empty:
-            #     table_type = 'View'
-            # else:
-            #     table_type = 'Table'
-
             db_type, table_type = classify_table_type_and_location(self.configs, target_name)
 
             db_table_type = db_type.upper() + table_type.lower()
@@ -122,7 +105,9 @@ class LineageCronstructor:
         Check if the table name belongs to the object_type and return it if it exists.
         Create it if it does not exist.
         """
-       
+        if not identifier:
+            identifier = {'name': target_name}
+            
         object = self.get_object_class(target_name, object_class)
         object_node = object.nodes.get_or_none(**identifier)
 
@@ -144,8 +129,8 @@ class LineageCronstructor:
                 source_type = next(iter({'View', 'Table'} & source_labels))
                 target_type = next(iter({'View', 'Table'} & target_labels))
 
-                source_to_target_rel_name = f"parent_from_{source_type.lower()}"
-                target_from_source_rel_name = f"child_to_{target_type.lower()}"
+                source_to_target_rel_name = f"parent_from_{target_type.lower()}"
+                target_from_source_rel_name = f"child_to_{source_type.lower()}"
 
                 # Dynamically connect the nodes
                 getattr(source_node, source_to_target_rel_name).connect(target_node)

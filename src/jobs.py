@@ -83,9 +83,15 @@ def create_erp_to_bidb_data_lineage(configs):
     # lineage_agent.clean_all_nodes()
 
     for _, row in erp_to_bidb_relationship_data.iterrows():
+        target_identifier = {
+            'name': row['target_table']
+        }
+        target_node = lineage_agent.get_or_create_node(target_name=row.target_table, **target_identifier)
 
-        target_node = lineage_agent.get_node(row.target_table, table_type=None)
-        source_node = lineage_agent.get_node(row.source_table, table_type=None)
+        source_identifier = {
+            'name': row['source_table']
+        }
+        source_node = lineage_agent.get_or_create_node(target_name=row.source_table, **source_identifier)
 
         lineage_agent.connect_nodes(target_node, source_node)        
 
@@ -110,4 +116,6 @@ def create_erp_views_lineage(configs, llm_type):
     for _, row in desconstructed_sql.iterrows():
         
         lineage_agent.result_destructure(row.view_name, row.format_fixed_lineage)
+
+    print('end')
 
