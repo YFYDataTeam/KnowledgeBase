@@ -132,14 +132,13 @@ class LoadPlan(StructuredNode):
     to_scenario = Relationship('Scenario', 'ToScenario', model=LoadPlanRel)
     scenario_from = Relationship('Scenario', 'ScenarioFrom', model=LoadPlanRel)
 
-
-class LoadPlanRS(LoadPlan):
-    pass
-
 class LoadPlanSE(LoadPlan):
     pass
 
 class LoadPlanPA(LoadPlan):
+    pass
+
+class LoadPlanRS(LoadPlan):
     pass
 
 ########################################################################

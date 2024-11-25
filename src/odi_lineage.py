@@ -46,10 +46,11 @@ class ODILineageBuilder(LineageCronstructor):
             # Fetch scenario steps
             scenario_step_query = self.qm.get_scenario_steps
             df_scen_steps = self.sql_agent.read_table(query=scenario_step_query.format(scen_no=scen_no))
-            df_scen_steps['scen_name'] = scen_name
-            df_scen_steps['scen_version'] = scen_version
+            if not df_scen_steps.empty:
+                df_scen_steps['scen_name'] = scen_name
+                df_scen_steps['scen_version'] = scen_version
 
-            df_scenario_steps = pd.concat([df_scenario_steps, df_scen_steps], axis=0)
+                df_scenario_steps = pd.concat([df_scenario_steps, df_scen_steps], axis=0)
 
         return loadplan_table, df_scenario_steps
 
@@ -67,7 +68,8 @@ class ODILineageBuilder(LineageCronstructor):
         df_related_steps = source_table[source_table[search_col] == pre_step_id]
 
         for _, row in df_related_steps.iterrows():
-            if row['par_i_lp_step'] is None:
+            previous_step_identifier = None
+            if row['par_i_lp_step'] is None and row['lp_step_type'] == 'SE':
                 # Create or get root-level relationship to LoadPlan node
                 previous_step_identifier = {
                     'name': f"LP_{source_table_uni_id}",
@@ -83,7 +85,15 @@ class ODILineageBuilder(LineageCronstructor):
                 object_class=ObjectType.LoadPlan.__str__() + 'PA'
 
             elif row['lp_step_type'] == 'RS':
-                pass
+                continue
+
+            elif row['lp_step_type'] == 'SE':
+                previous_step_identifier = {
+                    'name': f"SE_{pre_step_id}",
+                    'step_id': pre_step_id
+                }
+                object_class=ObjectType.LoadPlan.__str__() + 'SE'
+
             
             return self.get_or_create_node(
                     target_name=previous_step_identifier['name'], 
@@ -124,6 +134,8 @@ class ODILineageBuilder(LineageCronstructor):
                 }
                 self.get_or_create_node(target_name=identifier['name'], object_class=ObjectType.LoadPlan.__str__(), **identifier)
 
+                continue
+
             target_name = f"{lp_step_type}_{lp_step}"
             identifier = {
                 'name': target_name,
@@ -132,7 +144,7 @@ class ODILineageBuilder(LineageCronstructor):
             }
             cur_node = self.get_or_create_node(
                 target_name=identifier['name'], 
-                object_class=ObjectType.LoadPlan.__str__() + lp_step_type if lp_step_type in {'PA', 'RS'} else ObjectType.LoadPlan.__str__(),
+                object_class=ObjectType.LoadPlan.__str__() + lp_step_type if lp_step_type in {'SE', 'PA', 'RS'} else ObjectType.LoadPlan.__str__(),
                 **{k: v for k, v in identifier.items() if v is not None}
             )
 
@@ -170,7 +182,7 @@ class ODILineageBuilder(LineageCronstructor):
 
         # sort the nno for each scenario to make sure the table usage ordr is correct
         scenario_steps = scenario_steps.sort_values(['scen_no','nno'], ascending=True)
-        scenario_steps['prev_nno'] = scenario_steps.groupby('scen_no')['nno'].shift(1).fillna(0).astype(int)
+        scenario_steps['prev_nno'] = scenario_steps.groupby(['scen_no','step_name'])['nno'].shift(1).fillna(0).astype(int)
 
         for index, row in scenario_steps.iterrows():
 

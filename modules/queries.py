@@ -51,3 +51,9 @@ class Queries(Enum):
     from snp_scen_step
     where scen_no=550502 and table_name IS NOT Null
     """
+
+    ERP_ORDER = """
+    SELECT view_name, text
+    FROM all_views
+    where view_name = 'OE_ORDER_HEADERS_ALL#' 
+    """
