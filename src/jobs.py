@@ -25,13 +25,23 @@ class JobDispatcher:
 
             create_erp_to_bidb_data_lineage(self.configs)
 
-            create_erp_views_lineage(self.configs, llm_type=LlmType.AOAI)
+            query = Queries.ERP_TO_BI_TEST_CASE.value
+
+            create_erp_views_lineage(self.configs, query, llm_type=LlmType.AOAI)
 
 
         elif job_type == JobType.LOADPLAN:
             
             odi_lineage_builder = ODILineageBuilder(self.configs, self.qm,)
-            odi_lineage_builder.create_odi_lineage(loadplan_id='111502')
+            odi_lineage_builder.create_odi_lineage(loadplan_id='45502')
+
+        elif job_type == JobType.ERPVIEWS:
+
+            query = Queries.ERP_ORDER.value
+
+            create_erp_views_lineage(self.configs, query, llm_type=LlmType.AOAI)
+
+            print(1)
             
         else: 
             raise ValueError({f'Unknown job type: {job_type}'})
@@ -96,11 +106,9 @@ def create_erp_to_bidb_data_lineage(configs):
         lineage_agent.connect_nodes(target_node, source_node)        
 
 
-def create_erp_views_lineage(configs, llm_type):
+def create_erp_views_lineage(configs, query, llm_type):
 
     dbconfig = configs['Data_guard']
-    
-    query = Queries.ERP_TO_BI_TEST_CASE.value
 
     sql_agent = OracleAgent(config=dbconfig)
     erp_views = sql_agent.read_table(query=query)
