@@ -1,20 +1,20 @@
-import pandas as pd
 import os
 import logging
 import argparse
-from src.utils import read_config
-from src.type_enums import JobType, LlmType
-from src.sql_deconstruction import SQLDeconstructor
 from modules.queries import Queries
-from src.jobs import JobDispatcher
+from src.utils import read_config
+from src.type_enums import TestJobType, JobType, LlmType
+from src.testjobs import JobDispatcher
 
+from src.biview_lineage import create_bidb_views_lineage
 
 def get_argument():
     parser = argparse.ArgumentParser()
     # Enum is iterable, so we can specify the input by comprehension
-    parser.add_argument('--JobType', choices=[db_type.value for db_type in JobType], required=True, help="Pass the valid Job.")
-    # parser.add_grguemnt('--LineageType')
-    # parser.add_arguemnt('--LLM')
+    parser.add_argument('--TestJobType', choices=[goal.value for goal in TestJobType], required=False, default=None, help="Pass the valid TestJob.")
+    parser.add_argument('--JobType', choices=[goal.value for goal in JobType], required=False, default=None, help="Pass the valid Job.")
+    # parser.add_argument('--LineageType')
+    # parser.add_argument('--LLM')
     # parser.add_argument('--CLEANALLNODE')
 
     return parser.parse_args()
@@ -27,9 +27,12 @@ def main():
     configs = read_config(".env/info.json")
     args = get_argument()
 
-    dispatcher = JobDispatcher(configs, sql_dir)
-    dispatcher.run_job(JobType[args.JobType])
+    if args.TestJobType:
+        dispatcher = JobDispatcher(configs, sql_dir)
+        dispatcher.run_job(TestJobType[args.TestJobType])
 
+    if args.JobType.upper() == JobType.BIVIEWS.value:
+        create_bidb_views_lineage(configs, query=Queries.BI_VIEWS.value, llm_type=LlmType.AOAI)
 
 if __name__ == '__main__':
     main()

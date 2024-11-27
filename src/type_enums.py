@@ -1,10 +1,14 @@
 from enum import Enum
 
-class JobType(Enum):
+class TestJobType(Enum):
     BIVIEWS = 'BIVIEWS'
     ERPTOBI = 'ERPTOBI'
     ERPVIEWS = 'ERPVIEWS'
     LOADPLAN = 'LOADPLAN'
+
+class JobType(Enum):
+    BIVIEWS = 'BIVIEWS'
+
 
 class DBType(Enum):
     DW = 'DW'

@@ -19,7 +19,8 @@ class JobDispatcher:
 
         if job_type == JobType.BIVIEWS:
 
-            create_bidb_views_lineage(self.configs, llm_type=LlmType.AOAI)
+            query = Queries.BIDB_TEST_QUERY.value
+            create_bidb_views_lineage(self.configs, query, llm_type=LlmType.AOAI)
 
         elif job_type == JobType.ERPTOBI:
 
@@ -41,15 +42,13 @@ class JobDispatcher:
 
             create_erp_views_lineage(self.configs, query, llm_type=LlmType.AOAI)
 
-            print(1)
-            
         else: 
             raise ValueError({f'Unknown job type: {job_type}'})
 
 
-def create_bidb_views_lineage(configs, llm_type):
+def create_bidb_views_lineage(configs, query, llm_type):
 
-    query = Queries.BIDB_TEST_QUERY.value
+
     test_case = BIDB_TEST_CASES
 
 

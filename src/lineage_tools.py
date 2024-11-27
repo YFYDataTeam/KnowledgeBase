@@ -16,7 +16,6 @@ from modules.neo4jmodels import (
     # Scenario
 )
 from src.type_enums import DBType, ObjectType, DBPrefix
-from modules.queries import Queries
 
 
 class LineageCronstructor:
@@ -34,17 +33,21 @@ class LineageCronstructor:
 
         print("All data has been deleted from the Neo4j database.")
 
-    def check_all_nodes(self):
-        query = """
-        MATCH (a)-[r]-(b)
-        RETURN a, r, b
+    def check_node(self, target, label, property):
+        query = f"""
+        Match(n:{label})
+        where n.{property} = $target
+        return n
         """
-
-        cypher_results, meta = self.db.cypher_query(query)
-        if cypher_results:
-            results_as_dict = [dict(zip(meta, row)) for row in cypher_results]
-            return results_as_dict
-        else:
+        try:
+            cypher_results, meta = self.db.cypher_query(query, {'target': target})
+            if cypher_results:
+                results_as_dict = [dict(zip(meta, row)) for row in cypher_results]
+                return results_as_dict
+            else:
+                return None
+        except Exception as e:
+            print(f"Error executing Cypher query: {e}")
             return None
 
 
