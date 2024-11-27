@@ -57,18 +57,18 @@ class SQLDeconstructor:
         #     data = data[data['view_name'].isin(test_case)]
 
         # clean the original sql syntax
-        data['text'] = re.sub(r'1=1.*?(\s+|$)', '', data['text'])
-        data['text'] = re.sub(r'--*?(\s+|$)', '', data['text'])
-        data['text'] = data['text'].replace('\n', ' ')
-        data['text'] = data['text'].replace('\t', ' ')
+        # data['text'] = re.sub(r'1=1.*?(\s+|$)', '', data['text'])
+        # data['text'] = re.sub(r'--*?(\s+|$)', '', data['text'])
+        # data['text'] = data['text'].replace('\n', ' ')
+        # data['text'] = data['text'].replace('\t', ' ')
 
-        # data['input'] = re.sub(
-        #     r"(?i)(select\b)(.*?)(\bfrom\b)",  # Match from 'SELECT' to 'FROM'
-        #     r"\1 \3",                         # Keep only 'SELECT' and 'FROM'
-        #     data['text'],
-        #     flags=re.DOTALL                   # Make '.' match newlines
-        # )
-                
+
+        data['datasources'] = re.findall(
+            r"(?i)\bfrom\b\s+(.*?)(?=\bwhere\b|\bselect\b|\bgroup\b)",  # Match content after 'FROM' until 'WHERE', 'SELECT', or 'GROUP'
+            data['text'],                                              # Use the SQL query from the data dictionary
+            flags=re.DOTALL                                            # Allow matching across multiple lines
+        )
+                                
         data['lineage'] = ''
 
         return data
