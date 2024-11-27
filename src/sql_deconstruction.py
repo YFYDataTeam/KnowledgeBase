@@ -62,12 +62,12 @@ class SQLDeconstructor:
         data['text'] = data['text'].replace('\n', ' ')
         data['text'] = data['text'].replace('\t', ' ')
 
-        data['input'] = re.sub(
-            r"(?i)(select\b)(.*?)(\bfrom\b)",  # Match from 'SELECT' to 'FROM'
-            r"\1 \3",                         # Keep only 'SELECT' and 'FROM'
-            data['text'],
-            flags=re.DOTALL                   # Make '.' match newlines
-        )
+        # data['input'] = re.sub(
+        #     r"(?i)(select\b)(.*?)(\bfrom\b)",  # Match from 'SELECT' to 'FROM'
+        #     r"\1 \3",                         # Keep only 'SELECT' and 'FROM'
+        #     data['text'],
+        #     flags=re.DOTALL                   # Make '.' match newlines
+        # )
                 
         data['lineage'] = ''
 
