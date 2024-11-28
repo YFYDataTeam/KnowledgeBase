@@ -1,5 +1,5 @@
 import pandas as pd
-from src.type_enums import ObjectType
+from src.models import ObjectType
 from src.lineage_tools import LineageCronstructor
 from src.utils import OracleAgent, classify_table_type_and_location
 from modules.sql import QueryManager

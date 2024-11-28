@@ -18,7 +18,6 @@ class ViewLineageCreator(LineageCronstructor):
         super().__init__(configs)
 
 
-        
     def connect_view_and_source(self, view_name, datasource_list):
         # create view node
         view_node = self.get_or_create_node(view_name)

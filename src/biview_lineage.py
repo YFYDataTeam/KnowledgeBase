@@ -1,7 +1,5 @@
 import pandas as pd
-from src.type_enums import LineageType
-from src.sql_deconstruction import SQLDeconstructor
-from tests.test_cases import BIDB_TEST_CASES
+from src.sqlparser import SQLParser
 from src.view_lineage import ViewLineageCreator
 from src.utils import OracleAgent
 
@@ -23,13 +21,11 @@ def create_bidb_views_lineage(configs, query, llm_type):
 
         if result is None:
 
-            relationship_type = LineageType.DataSourceOnly
+            sql_parser = SQLParser(configs, llm_type)
 
-            sql_deconstructor = SQLDeconstructor(configs, llm_type)
+            parse_result = sql_parser.parse_datasource(row, parse_type='re')
 
-            desconstructed_sql = sql_deconstructor.run(row, relationship_type)
-
-            desconstruted_sql_list.append(desconstructed_sql)
+            desconstruted_sql_list.append(parse_result)
 
             df_desconstruted_result = pd.DataFrame(desconstruted_sql_list)
         

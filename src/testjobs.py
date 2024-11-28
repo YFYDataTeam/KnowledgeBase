@@ -1,7 +1,7 @@
 import os
 from modules.queries import Queries
-from src.type_enums import JobType, LineageType, DBType, LlmType
-from src.sql_deconstruction import SQLDeconstructor
+from src.models import JobType, LineageType, DBType, LlmType
+from src.sqlparser import SQLParser
 from tests.test_cases import BIDB_TEST_CASES
 from src.lineage_tools import LineageCronstructor
 from src.view_lineage import ViewLineageCreator
@@ -17,12 +17,7 @@ class JobDispatcher:
 
     def run_job(self, job_type):
 
-        if job_type == JobType.BIVIEWS:
-
-            query = Queries.BIDB_TEST_QUERY.value
-            create_bidb_views_lineage(self.configs, query, llm_type=LlmType.AOAI)
-
-        elif job_type == JobType.ERPTOBI:
+        if job_type == JobType.ERPTOBI:
 
             create_erp_to_bidb_data_lineage(self.configs)
 
@@ -45,36 +40,6 @@ class JobDispatcher:
         else: 
             raise ValueError({f'Unknown job type: {job_type}'})
 
-
-def create_bidb_views_lineage(configs, query, llm_type):
-
-
-    test_case = BIDB_TEST_CASES
-
-
-    sql_agent = OracleAgent(configs['BIDB_conn_info'])
-    input_data = sql_agent.read_table(query=query)
-
-    if test_case:
-        input_data = input_data[input_data['view_name'].isin(test_case)]
-
-    relationship_type = LineageType.DataSourceOnly
-
-    sql_deconstructor = SQLDeconstructor(configs, llm_type)
-
-    desconstructed_sql = sql_deconstructor.run(input_data, relationship_type)
-
-    lineage_agent = ViewLineageCreator(configs)
-
-    for _, row in desconstructed_sql.iterrows():
-        
-        lineage_agent.result_destructure(row.view_name, row.format_fixed_lineage)
-
-    # lineage_agent.run(desconstructed_sql)
-
-    # for testing, delete all nodes at first
-    # lineage_agent.clean_all_nodes()
-    
 
 def create_erp_to_bidb_data_lineage(configs):
     """
@@ -114,9 +79,9 @@ def create_erp_views_lineage(configs, query, llm_type):
 
     relationship_type = LineageType.DataSourceOnly
 
-    sql_deconstructor = SQLDeconstructor(configs, llm_type)
+    sql_parser= SQLParser(configs, llm_type)
 
-    desconstructed_sql = sql_deconstructor.run(erp_views, relationship_type)
+    desconstructed_sql = sql_parser.parse_datasource(row, parse_type='re')
 
     lineage_agent = ViewLineageCreator(configs)
     

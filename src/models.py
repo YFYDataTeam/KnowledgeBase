@@ -19,6 +19,10 @@ class LineageType(Enum):
     DataSourceOnly='DATASOURCEONLY'
     FullRelationship='FULLREL'
 
+class ParseType(Enum):
+    RE = 'RE'
+    LLM = 'LLM'
+
 class LlmType(Enum):
     AOAI='AOAI'
 

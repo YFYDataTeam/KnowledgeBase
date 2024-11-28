@@ -3,7 +3,7 @@ import logging
 import argparse
 from modules.queries import Queries
 from src.utils import read_config
-from src.type_enums import TestJobType, JobType, LlmType
+from src.models import TestJobType, JobType, LlmType
 from src.testjobs import JobDispatcher
 
 from src.biview_lineage import create_bidb_views_lineage
@@ -32,7 +32,7 @@ def main():
         dispatcher.run_job(TestJobType[args.TestJobType])
 
     if args.JobType.upper() == JobType.BIVIEWS.value:
-        create_bidb_views_lineage(configs, query=Queries.BI_VIEWS.value, llm_type=LlmType.AOAI)
+        create_bidb_views_lineage(configs, query=Queries.BI_VIEWS.value, llm_type=None)
 
 if __name__ == '__main__':
     main()

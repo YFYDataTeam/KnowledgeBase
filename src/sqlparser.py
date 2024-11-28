@@ -8,18 +8,17 @@ from langchain.prompts.chat import (
     HumanMessagePromptTemplate
 )
 
-from src.models import DBType, LineageType, LlmType
+from src.models import DBType, ParseType, LlmType, LineageType
 from langchain_openai import AzureChatOpenAI
 
 import modules.prompts as prompts
 
 
 class SQLParser:
-    def __init__(self, configs, llm_type):
+    def __init__(self, configs, llm_type=None):
         self.configs = configs
         if llm_type == LlmType.AOAI:
             self.llm_configs = configs['AOAI']
-        
 
     def _get_db_agent(self, db_name):
 
@@ -48,24 +47,7 @@ class SQLParser:
         )
 
         return llm
-
-    def sql_syntax_clean(self, data):
-
-        # data = db_agent.read_table(query=query)
-
-        # if test_case:
-        #     data = data[data['view_name'].isin(test_case)]
-
-        # clean the original sql syntax
-        data['text'] = re.sub(r'1=1.*?(\s+|$)', '', data['text'])
-        data['text'] = re.sub(r'--*?(\s+|$)', '', data['text'])
-        data['text'] = data['text'].replace('\n', ' ')
-        data['text'] = data['text'].replace('\t', ' ')
-                                
-        data['lineage'] = ''
-
-        return data
-
+    
     def sql_deconstruction(self, data: str, llm, system_prompt):
 
         system_template = system_prompt
@@ -151,16 +133,48 @@ class SQLParser:
 
         return data
 
-    def llm_deconstruct(self, input_data, relationship_type):
+    def parse_datasource_by_llm(self, input_data, relationship_type):
 
         cleaned_input_data = self.sql_syntax_clean(input_data)
 
         llm = self._get_llm_agent(self.llm_configs)
         if relationship_type == LineageType.DataSourceOnly:
             system_prompt = prompts.PROMPT_ONLY_DATASOURCE
+        else:
+            raise ValueError(f'{relationship_type} is invalid.')
 
         desconstructed_sql = self.sql_deconstruction(cleaned_input_data, llm, system_prompt)
 
         formatted_desconstructed_sql = self.llm_result_correction(llm, desconstructed_sql)
 
         return formatted_desconstructed_sql
+    
+
+    def parse_datasource_by_re(self, data):
+
+        data['datasources'] = re.findall(
+            r"(?i)\bfrom\b\s+(.*?)(?=\bwhere\b|\bselect\b|\bgroup\b)",  # Match content after 'FROM' until 'WHERE', 'SELECT', or 'GROUP'
+            data['text'],                                              # Use the SQL query from the data dictionary
+            flags=re.DOTALL                                            # Allow matching across multiple lines
+        )
+
+        data['datasources'] = [item.strip() for item in data['datasources'][0].split(',')]
+                                
+        data['lineage'] = ''
+
+        return data
+    
+
+    def parse_datasource(self, data, parse_type):
+
+        if parse_type.upper() == ParseType.RE.value:
+ 
+            parse_result = self.parse_datasource_by_re(data)
+
+        elif parse_type.upper() == ParseType.LLM.value:
+
+            parse_result = self.parse_by_llm(data)
+
+        
+
+        return parse_result

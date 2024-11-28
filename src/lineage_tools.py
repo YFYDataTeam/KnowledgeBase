@@ -15,7 +15,7 @@ from modules.neo4jmodels import (
     # Package,
     # Scenario
 )
-from src.type_enums import DBType, ObjectType, DBPrefix
+from src.models import DBType, ObjectType, DBPrefix
 
 
 class LineageCronstructor:
