@@ -8,19 +8,20 @@ from langchain.prompts.chat import (
     HumanMessagePromptTemplate
 )
 
-from src.models import DBType, ParseType, LlmType, LineageType
+from src.models import DBType, LineageType, LlmType
 from langchain_openai import AzureChatOpenAI
 
 import modules.prompts as prompts
 
 
 class SQLParser:
-    def __init__(self, configs, llm_type=None):
+    def __init__(self, configs, llm_type):
         self.configs = configs
         if llm_type == LlmType.AOAI:
             self.llm_configs = configs['AOAI']
+        
 
-    def _get_db_agent(self, db_name):
+    def get_db_agent(self, db_name):
 
         if DBType(db_name) == DBType.DWDB:
             db_agent = OracleAgent(self.configs['DW_conn_info'])
@@ -29,7 +30,7 @@ class SQLParser:
 
         return db_agent
     
-    def _get_llm_agent(self, llm_configs):
+    def get_llm_agent(self, llm_configs):
 
         # for AOAi
         OPENAI_API_BASE = llm_configs['OPENAI_API_BASE']
@@ -47,8 +48,27 @@ class SQLParser:
         )
 
         return llm
-    
-    def sql_deconstruction(self, data: str, llm, system_prompt):
+
+    def sql_syntax_clean(self, data):
+
+        # data = db_agent.read_table(query=query)
+
+        # if test_case:
+        #     data = data[data['view_name'].isin(test_case)
+
+        # clean the original sql syntax
+        data['input'] = re.sub(
+            r"(?i)\bselect\b(.*?)(?=\bfrom\b)",  # Match 'SELECT' and everything up to the next 'FROM'
+            "SELECT ",  # Replace with just 'SELECT ' (keeping 'FROM' intact)
+            data['text'],
+            flags=re.DOTALL  # Allow matching across multiple lines
+        )
+        
+        data['lineage'] = ''
+
+        return data
+
+    def sql_deconstruction(self, data, llm, system_prompt):
 
         system_template = system_prompt
         messages = [
@@ -60,15 +80,14 @@ class SQLParser:
 
         chain = CHAT_PROMPT | llm
 
-        print(f"Deconstructing '{data['view_name']}' with text length {data['text_length']}.")
-
         input_data = {
-            'table_name': data["view_name"],
-            'datasource': data["text_length"]
+            'table_name': data['view_name'],
+            'datasource': data['input']
         }
         llm_response = chain.invoke(input_data)
 
         data['lineage'] = llm_response.content
+
 
         return data
     
@@ -128,53 +147,23 @@ class SQLParser:
         data['llm_fixed_lineage'] = llm_response.content
 
         data['format_fixed_lineage'] = np.where(data['llm_fixed_lineage'] == 'nochange', data['lineage'], data['lineage'])
-        string_cleaning_vectorized = np.vectorize(SQLParser.string_cleaning)
-        data['format_fixed_lineage'] = string_cleaning_vectorized(data['format_fixed_lineage'])
+        data['format_fixed_lineage'] = SQLParser.string_cleaning(str(data['format_fixed_lineage']))
 
         return data
 
-    def parse_datasource_by_llm(self, input_data, relationship_type):
+    def extract_data(self, input_data, relationship_type):
+
+        # db_agent = self.get_db_agent(db_name)
+        # input_data = self.read_data(db_agent, query, test_case)
 
         cleaned_input_data = self.sql_syntax_clean(input_data)
 
-        llm = self._get_llm_agent(self.llm_configs)
+        llm = self.get_llm_agent(self.llm_configs)
         if relationship_type == LineageType.DataSourceOnly:
             system_prompt = prompts.PROMPT_ONLY_DATASOURCE
-        else:
-            raise ValueError(f'{relationship_type} is invalid.')
 
         desconstructed_sql = self.sql_deconstruction(cleaned_input_data, llm, system_prompt)
 
         formatted_desconstructed_sql = self.llm_result_correction(llm, desconstructed_sql)
 
         return formatted_desconstructed_sql
-    
-
-    def parse_datasource_by_re(self, data):
-
-        data['datasources'] = re.findall(
-            r"(?i)\bfrom\b\s+(.*?)(?=\bwhere\b|\bselect\b|\bgroup\b)",  # Match content after 'FROM' until 'WHERE', 'SELECT', or 'GROUP'
-            data['text'],                                              # Use the SQL query from the data dictionary
-            flags=re.DOTALL                                            # Allow matching across multiple lines
-        )
-
-        data['datasources'] = [item.strip() for item in data['datasources'][0].split(',')]
-                                
-        data['lineage'] = ''
-
-        return data
-    
-
-    def parse_datasource(self, data, parse_type):
-
-        if parse_type.upper() == ParseType.RE.value:
- 
-            parse_result = self.parse_datasource_by_re(data)
-
-        elif parse_type.upper() == ParseType.LLM.value:
-
-            parse_result = self.parse_by_llm(data)
-
-        
-
-        return parse_result

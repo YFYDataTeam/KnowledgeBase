@@ -32,7 +32,7 @@ def main():
         dispatcher.run_job(TestJobType[args.TestJobType])
 
     if args.JobType.upper() == JobType.BIVIEWS.value:
-        create_bidb_views_lineage(configs, query=Queries.BI_VIEWS.value, llm_type=None)
+        create_bidb_views_lineage(configs, query=Queries.BI_VIEWS.value, llm_type=LlmType.AOAI)
 
 if __name__ == '__main__':
     main()

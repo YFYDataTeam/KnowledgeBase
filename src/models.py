@@ -41,7 +41,7 @@ class ObjectType(Enum):
 
 class DBPrefix(Enum):
 
-    BI = {'W_'}
+    BI = {'W_', 'C$_0'}
     ERP = {}
 
     @staticmethod
