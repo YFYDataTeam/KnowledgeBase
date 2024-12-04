@@ -3,7 +3,7 @@ import logging
 import argparse
 from modules.queries import Queries
 from src.utils import read_config
-from src.type_enums import TestJobType, JobType, LlmType
+from src.models import TestJobType, JobType, LlmType
 from src.testjobs import JobDispatcher
 
 from src.biview_lineage import create_bidb_views_lineage

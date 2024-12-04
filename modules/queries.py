@@ -59,6 +59,6 @@ class Queries(Enum):
     """
 
     BI_VIEWS = """
-    SELECT view_name, text_length, text FROM ALL_Views
-    WHERE owner = 'ODS' AND view_name = 'W_YFY_PM_STD_RSC_USG_AMT_V'
+    SELECT view_name , text_length, text FROM ALL_Views
+    WHERE owner = 'ODS' AND text_length < 3000
     """

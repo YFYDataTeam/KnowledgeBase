@@ -19,6 +19,10 @@ class LineageType(Enum):
     DataSourceOnly='DATASOURCEONLY'
     FullRelationship='FULLREL'
 
+class ParseType(Enum):
+    RE = 'RE'
+    LLM = 'LLM'
+
 class LlmType(Enum):
     AOAI='AOAI'
 
@@ -37,7 +41,7 @@ class ObjectType(Enum):
 
 class DBPrefix(Enum):
 
-    BI = {'W_'}
+    BI = {'W_', 'C$_0'}
     ERP = {}
 
     @staticmethod

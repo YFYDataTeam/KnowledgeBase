@@ -1,9 +1,8 @@
 import pandas as pd
-from src.type_enums import LineageType
-from src.sql_deconstruction import SQLDeconstructor
-from tests.test_cases import BIDB_TEST_CASES
+from src.sqlparser import SQLParser
 from src.view_lineage import ViewLineageCreator
 from src.utils import OracleAgent
+from src.models import LineageType, LlmType
 
 
 def create_bidb_views_lineage(configs, query, llm_type):
@@ -18,18 +17,17 @@ def create_bidb_views_lineage(configs, query, llm_type):
 
     desconstruted_sql_list = []
     for _, row in input_data.iterrows():
+        print(f"Parsing: '{row['view_name']}'.")
         target = row['view_name']
         result = view_lineage_agent.check_node(target=row['view_name'], label='BIview', property='name')
 
         if result is None:
 
-            relationship_type = LineageType.DataSourceOnly
+            sql_parser = SQLParser(configs, llm_type)
 
-            sql_deconstructor = SQLDeconstructor(configs, llm_type)
+            parse_result = sql_parser.extract_data(row, relationship_type=LineageType.DataSourceOnly)
 
-            desconstructed_sql = sql_deconstructor.run(row, relationship_type)
-
-            desconstruted_sql_list.append(desconstructed_sql)
+            desconstruted_sql_list.append(parse_result)
 
             df_desconstruted_result = pd.DataFrame(desconstruted_sql_list)
         
@@ -37,8 +35,6 @@ def create_bidb_views_lineage(configs, query, llm_type):
             print(f'{target} is existed.')
             continue
     
-
-    for _, row in df_desconstruted_result.iterrows():
         try:
             print(f"Building nodes for: '{row['view_name']}'.")
             view_lineage_agent.build_view_source_lineage(row['view_name'], row['format_fixed_lineage'])

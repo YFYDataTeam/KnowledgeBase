@@ -6,7 +6,7 @@ import warnings
 import os
 
 from modules.queries import Queries
-from src.type_enums import DBPrefix
+from src.models import DBPrefix
 
 def read_config(path):
     try:

@@ -8,13 +8,13 @@ from langchain.prompts.chat import (
     HumanMessagePromptTemplate
 )
 
-from src.type_enums import DBType, LineageType, LlmType
+from src.models import DBType, LineageType, LlmType
 from langchain_openai import AzureChatOpenAI
 
 import modules.prompts as prompts
 
 
-class SQLDeconstructor:
+class SQLParser:
     def __init__(self, configs, llm_type):
         self.configs = configs
         if llm_type == LlmType.AOAI:
@@ -54,26 +54,21 @@ class SQLDeconstructor:
         # data = db_agent.read_table(query=query)
 
         # if test_case:
-        #     data = data[data['view_name'].isin(test_case)]
+        #     data = data[data['view_name'].isin(test_case)
 
         # clean the original sql syntax
-        # data['text'] = re.sub(r'1=1.*?(\s+|$)', '', data['text'])
-        # data['text'] = re.sub(r'--*?(\s+|$)', '', data['text'])
-        # data['text'] = data['text'].replace('\n', ' ')
-        # data['text'] = data['text'].replace('\t', ' ')
-
-
-        data['datasources'] = re.findall(
-            r"(?i)\bfrom\b\s+(.*?)(?=\bwhere\b|\bselect\b|\bgroup\b)",  # Match content after 'FROM' until 'WHERE', 'SELECT', or 'GROUP'
-            data['text'],                                              # Use the SQL query from the data dictionary
-            flags=re.DOTALL                                            # Allow matching across multiple lines
+        data['input'] = re.sub(
+            r"(?i)\bselect\b(.*?)(?=\bfrom\b)",  # Match 'SELECT' and everything up to the next 'FROM'
+            "SELECT ",  # Replace with just 'SELECT ' (keeping 'FROM' intact)
+            data['text'],
+            flags=re.DOTALL  # Allow matching across multiple lines
         )
-                                
+        
         data['lineage'] = ''
 
         return data
 
-    def sql_deconstruction(self, data: str, llm, system_prompt):
+    def sql_deconstruction(self, data, llm, system_prompt):
 
         system_template = system_prompt
         messages = [
@@ -85,11 +80,9 @@ class SQLDeconstructor:
 
         chain = CHAT_PROMPT | llm
 
-        print(f"Deconstructing '{data['view_name']}' with text length {data['text_length']}.")
-
         input_data = {
-            'table_name': data["view_name"],
-            'datasource': data["text_length"]
+            'table_name': data['view_name'],
+            'datasource': data['input']
         }
         llm_response = chain.invoke(input_data)
 
@@ -154,12 +147,11 @@ class SQLDeconstructor:
         data['llm_fixed_lineage'] = llm_response.content
 
         data['format_fixed_lineage'] = np.where(data['llm_fixed_lineage'] == 'nochange', data['lineage'], data['lineage'])
-        string_cleaning_vectorized = np.vectorize(SQLDeconstructor.string_cleaning)
-        data['format_fixed_lineage'] = string_cleaning_vectorized(data['format_fixed_lineage'])
+        data['format_fixed_lineage'] = SQLParser.string_cleaning(str(data['format_fixed_lineage']))
 
         return data
 
-    def run(self, input_data, relationship_type):
+    def extract_data(self, input_data, relationship_type):
 
         # db_agent = self.get_db_agent(db_name)
         # input_data = self.read_data(db_agent, query, test_case)
