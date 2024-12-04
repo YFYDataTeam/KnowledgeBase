@@ -5,8 +5,6 @@ from sqlalchemy import create_engine
 import warnings
 import os
 
-from modules.queries import Queries
-from src.models import DBPrefix
 
 def read_config(path):
     try:
@@ -93,22 +91,3 @@ class OracleAgent:
         return df
 
 
-def classify_table_type_and_location(configs, name):
-    db_type = DBPrefix.get_db_type(name).name
-    # if the table_name can be found in all_views then it's view, otherwise, table.
-    bi_sql_agent = OracleAgent(configs['BIDB_conn_info'])
-    biview_check_query = Queries.VIEWS_EQ.get_query(name)
-    bi_result = bi_sql_agent.read_table(biview_check_query)
-
-    # dataguard is the DB to store the data from ERP
-    dataguard_sql_agent = OracleAgent(configs['Data_guard'])
-    dataguard_check_query = Queries.VIEWS_EQ.get_query(name)
-    dataguard_result = dataguard_sql_agent.read_table(dataguard_check_query)
-
-    if not bi_result.empty or not dataguard_result.empty:
-        table_type = 'View'
-    else:
-        table_type = 'Table'
-
-
-    return db_type, table_type
