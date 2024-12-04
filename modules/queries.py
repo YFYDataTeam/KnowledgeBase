@@ -57,3 +57,8 @@ class Queries(Enum):
     FROM all_views
     where view_name = 'OE_ORDER_HEADERS_ALL#' 
     """
+
+    BI_VIEWS = """
+    SELECT view_name , text_length, text FROM ALL_Views
+    WHERE owner = 'ODS' AND text_length < 3000
+    """

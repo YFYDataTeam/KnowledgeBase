@@ -18,8 +18,7 @@ class ViewLineageCreator(LineageCronstructor):
         super().__init__(configs)
 
 
-        
-    def create_view_data_source(self, view_name, datasource_list):
+    def connect_view_and_source(self, view_name, datasource_list):
         # create view node
         view_node = self.get_or_create_node(view_name)
         # view_node.syntax = syntax
@@ -28,15 +27,14 @@ class ViewLineageCreator(LineageCronstructor):
         # create table node
         for table_name in datasource_list:
             table_node = self.get_or_create_node(table_name)  
-            
             self.connect_nodes(view_node, table_node)      
+            print(f"Successfully complete the lineage of view '{view_name}'.")
 
 
-
-        # Desconstruct all of the LLM result
-    def result_destructure(self, view_name, input_string):
+    # Desconstruct all of the LLM result
+    def build_view_source_lineage(self, view_name, input):
         # convert to dict
-        input_dict = json.loads(input_string)
+        input_dict = json.loads(str(input))
 
         # Convert the dictionary keys to a pandas Series 
         keys_series = pd.Series(input_dict.keys())
@@ -51,11 +49,11 @@ class ViewLineageCreator(LineageCronstructor):
                 # groupby_dict = vlaue['Groupby']
             
                 # here we call the function for desconstructing join_list, datasource_list, filter_list, groupby_dict
-                self.create_view_data_source(view_name, datasource_list)
+                self.connect_view_and_source(view_name, datasource_list)
         else:
             datasource_list = input_dict['Datasource']
             # filter_list = input_dict['Filter']
             # join_list = input_dict['Join']
             # groupby_dict = input_dict['Groupby']
 
-            self.create_view_data_source(view_name, datasource_list)
+            self.connect_view_and_source(view_name, datasource_list)

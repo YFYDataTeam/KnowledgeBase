@@ -1,10 +1,14 @@
 from enum import Enum
 
-class JobType(Enum):
+class TestJobType(Enum):
     BIVIEWS = 'BIVIEWS'
     ERPTOBI = 'ERPTOBI'
     ERPVIEWS = 'ERPVIEWS'
     LOADPLAN = 'LOADPLAN'
+
+class JobType(Enum):
+    BIVIEWS = 'BIVIEWS'
+
 
 class DBType(Enum):
     DW = 'DW'
@@ -14,6 +18,10 @@ class DBType(Enum):
 class LineageType(Enum):
     DataSourceOnly='DATASOURCEONLY'
     FullRelationship='FULLREL'
+
+class ParseType(Enum):
+    RE = 'RE'
+    LLM = 'LLM'
 
 class LlmType(Enum):
     AOAI='AOAI'
@@ -33,7 +41,7 @@ class ObjectType(Enum):
 
 class DBPrefix(Enum):
 
-    BI = {'W_'}
+    BI = {'W_', 'C$_0'}
     ERP = {}
 
     @staticmethod

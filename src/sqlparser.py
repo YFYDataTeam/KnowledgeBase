@@ -8,13 +8,13 @@ from langchain.prompts.chat import (
     HumanMessagePromptTemplate
 )
 
-from src.type_enums import DBType, LineageType, LlmType
+from src.models import DBType, LineageType, LlmType
 from langchain_openai import AzureChatOpenAI
 
 import modules.prompts as prompts
 
 
-class SQLDeconstructor:
+class SQLParser:
     def __init__(self, configs, llm_type):
         self.configs = configs
         if llm_type == LlmType.AOAI:
@@ -54,19 +54,21 @@ class SQLDeconstructor:
         # data = db_agent.read_table(query=query)
 
         # if test_case:
-        #     data = data[data['view_name'].isin(test_case)]
-
-        data_copy = data.copy()
+        #     data = data[data['view_name'].isin(test_case)
 
         # clean the original sql syntax
-        data_copy['text'] = data_copy['text'].str.replace('\n', ' ')
-        data_copy['text'] = data_copy['text'].str.replace('\t', ' ')
-        data_copy['input'] = data_copy['text'].apply(lambda x:re.sub(r'1=1.*?(\s+|$)', '', x)) 
-        data_copy['lineage'] = ''
+        data['input'] = re.sub(
+            r"(?i)\bselect\b(.*?)(?=\bfrom\b)",  # Match 'SELECT' and everything up to the next 'FROM'
+            "SELECT ",  # Replace with just 'SELECT ' (keeping 'FROM' intact)
+            data['text'],
+            flags=re.DOTALL  # Allow matching across multiple lines
+        )
+        
+        data['lineage'] = ''
 
-        return data_copy
+        return data
 
-    def sql_deconstruction(self, data: pd.DataFrame, llm, system_prompt):
+    def sql_deconstruction(self, data, llm, system_prompt):
 
         system_template = system_prompt
         messages = [
@@ -77,14 +79,14 @@ class SQLDeconstructor:
         CHAT_PROMPT = ChatPromptTemplate.from_messages(messages)
 
         chain = CHAT_PROMPT | llm
-        for idx, row in data.iterrows():
-            input_data = {
-                'table_name': row.view_name,
-                'datasource': row.input
-            }
-            llm_response = chain.invoke(input_data)
 
-            data.at[idx, 'lineage'] = llm_response.content
+        input_data = {
+            'table_name': data['view_name'],
+            'datasource': data['input']
+        }
+        llm_response = chain.invoke(input_data)
+
+        data['lineage'] = llm_response.content
 
 
         return data
@@ -137,20 +139,19 @@ class SQLDeconstructor:
         CHAT_PROMPT = ChatPromptTemplate.from_messages(messages)    
         chain = CHAT_PROMPT | llm
 
-        for idx, row in data.iterrows():
-            input_data = {
-                'input_string': row.lineage,
-            }
-            llm_response = chain.invoke(input_data)
+        input_data = {
+            'input_string': data['lineage'],
+        }
+        llm_response = chain.invoke(input_data)
 
-            data.at[idx, 'llm_fixed_lineage'] = llm_response.content
+        data['llm_fixed_lineage'] = llm_response.content
 
         data['format_fixed_lineage'] = np.where(data['llm_fixed_lineage'] == 'nochange', data['lineage'], data['lineage'])
-        data['format_fixed_lineage'] = data['format_fixed_lineage'].apply(SQLDeconstructor.string_cleaning)
+        data['format_fixed_lineage'] = SQLParser.string_cleaning(str(data['format_fixed_lineage']))
 
         return data
 
-    def run(self, input_data, relationship_type):
+    def extract_data(self, input_data, relationship_type):
 
         # db_agent = self.get_db_agent(db_name)
         # input_data = self.read_data(db_agent, query, test_case)
