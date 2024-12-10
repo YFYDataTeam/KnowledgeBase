@@ -8,7 +8,7 @@ from src.testjobs import JobDispatcher
 
 from src.biview_lineage import create_bidb_views_lineage
 
-def get_argument():
+def get_arguement():
     parser = argparse.ArgumentParser()
     # Enum is iterable, so we can specify the input by comprehension
     parser.add_argument('--TestJobType', choices=[goal.value for goal in TestJobType], required=False, default=None, help="Pass the valid TestJob.")
@@ -25,7 +25,7 @@ def main():
     parent_path =  os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     sql_dir = os.path.join(os.path.dirname(__file__), 'sql_files')
     configs = read_config(".env/info.json")
-    args = get_argument()
+    args = get_arguement()
 
     if args.TestJobType:
         dispatcher = JobDispatcher(configs, sql_dir)
