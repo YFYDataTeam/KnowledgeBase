@@ -1,3 +1,14 @@
+CORRECTION_PROMPT="""
+    Fix the following string to make the format can be loaded by json.loads(), whic means removing any unnecessary characters.
+    For the input is correct, just return 'nochange'.
+
+    Only return the result without any other words.
+    Remember, just fix the wrong format, keep any other things unchange and don't add ```json things.
+
+    input: {input_string}
+    """
+
+
 SYSTEM_PROMPT="""
    I will provide the table_name and the corresponing Oracle SQL. 
     Recongize all the unique identifer such as DIM_ORG org, the unique identifier is org.

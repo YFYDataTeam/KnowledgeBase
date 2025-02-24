@@ -1,42 +1,38 @@
+import os
+import logging
 import argparse
+from modules.queries import Queries
 from src.utils import read_config
-from src.enum import DBEnum, LineageType
-from src.sql_deconstruction import SqlDeconstructor
-from models.queries import bidb_test_query
+from src.models import TestJobType, JobType, LlmType
+from src.testjobs import JobDispatcher
 
-
+from src.biview_lineage import create_bidb_views_lineage
 
 def get_argument():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--DB')
-    # parser.add_grguemnt('--JobType')
-    # parser.add_arguemnt('--LLM')
+    # Enum is iterable, so we can specify the input by comprehension
+    parser.add_argument('--TestJobType', choices=[goal.value for goal in TestJobType], required=False, default=None, help="Pass the valid TestJob.")
+    parser.add_argument('--JobType', choices=[goal.value for goal in JobType], required=False, default=None, help="Pass the valid Job.")
+    # parser.add_argument('--LineageType')
+    # parser.add_argument('--LLM')
+    # parser.add_argument('--CLEANALLNODE')
 
     return parser.parse_args()
 
 
-if __name__ == '__main__':
+def main():
+    # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    parent_path =  os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    sql_dir = os.path.join(os.path.dirname(__file__), 'sql_files')
     configs = read_config(".env/info.json")
-    llm_config = configs['AOAI']
     args = get_argument()
 
-    sql_deconstructor = SqlDeconstructor(configs=llm_config)
+    if args.TestJobType:
+        dispatcher = JobDispatcher(configs, sql_dir)
+        dispatcher.run_job(TestJobType[args.TestJobType])
 
-    if args.DB.upper() == DBEnum.BIDB:
-        query = bidb_test_query
-            
-        test_case = ['C$_0W_YFY_AV_TW_R',
-                'C$_0W_YFY_IND_FIN_INFO_FS',
-                'OP_FACT_CHP_INVENTORY_ETH_PULP',
-                'OP_FACT_CHP_INVENTORY_REDEFINE',
-                'OP_FACT_CHP_SALES_DETAILS']
-        
-        db_name = 'BIDB'
+    if args.JobType.upper() == JobType.BIVIEWS.value:
+        create_bidb_views_lineage(configs, query=Queries.BI_VIEWS.value, llm_type=LlmType.AOAI)
 
-        type = LineageType.DataSourceOnly
-
-        desconstructed_sql = sql_deconstructor.run(db_name, query, test_case, type)
-
-    elif args.DB.upper() == DBEnum.DWDB:
-        db_name = 'DWDB'
-        # sql_deconstructor.run(db_name, query, test_case)
+if __name__ == '__main__':
+    main()
