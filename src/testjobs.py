@@ -17,7 +17,7 @@ class JobDispatcher:
 
     def run_job(self, job_type):
 
-        if job_type == JobType.ERPTOBI:
+        if job_type == JobType.ERPTOBI.value:
 
             create_erp_to_bidb_data_lineage(self.configs)
 
@@ -26,12 +26,12 @@ class JobDispatcher:
             create_erp_views_lineage(self.configs, query, llm_type=LlmType.AOAI)
 
 
-        elif job_type == JobType.LOADPLAN:
+        elif job_type == JobType.LOADPLAN.value:
             
             odi_lineage_builder = ODILineageBuilder(self.configs, self.qm,)
             odi_lineage_builder.create_odi_lineage(loadplan_id='45502')
 
-        elif job_type == JobType.ERPVIEWS:
+        elif job_type == JobType.ERPVIEWS.value:
 
             query = Queries.ERP_ORDER.value
 

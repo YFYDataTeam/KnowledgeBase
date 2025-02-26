@@ -8,6 +8,9 @@ class TestJobType(Enum):
 
 class JobType(Enum):
     BIVIEWS = 'BIVIEWS'
+    ERPTOBI = 'ERPTOBI'
+    ERPVIEWS = 'ERPVIEWS'
+    LOADPLAN = 'LOADPLAN'
 
 
 class DBType(Enum):

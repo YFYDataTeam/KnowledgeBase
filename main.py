@@ -29,7 +29,7 @@ def main():
 
     if args.TestJobType:
         dispatcher = JobDispatcher(configs, sql_dir)
-        dispatcher.run_job(TestJobType[args.TestJobType])
+        dispatcher.run_job(TestJobType[args.TestJobType].value)
 
     if args.JobType.upper() == JobType.BIVIEWS.value:
         create_bidb_views_lineage(configs, query=Queries.BI_VIEWS.value, llm_type=LlmType.AOAI)

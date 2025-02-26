@@ -22,7 +22,7 @@ class LineageCronstructor:
     def __init__(self, configs) -> None:
         # self.db_type = db_type
         self.configs = configs
-        config.DATABASE_URL = configs['local_neo4jdb']
+        config.DATABASE_URL = configs['remote_neo4jdb']
         self.db = db
 
 
